@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOH Digs | Find Your Next Dig</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f7f3;
+      color: #243529;
+    }
+
+    header {
+      background: #193b2b;
+      color: white;
+      padding: 22px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    nav {
+      margin-top: 15px;
+    }
+
+    nav a {
+      color: white;
+      margin: 0 12px;
+      text-decoration: none;
+    }
+
+    .hero {
+      padding: 75px 20px;
+      text-align: center;
+      background: #dce9d8;
+    }
+
+    .hero h2 {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      font-size: 18px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 14px 25px;
+      margin-top: 18px;
+      background: #193b2b;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .feature {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px #00000012;
+    }
+
+    footer {
+      text-align: center;
+      padding: 25px;
+      background: #193b2b;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SOH Digs</h1>
+    <p>Discover Metal Detecting Events Across the UK</p>
+    <nav>
+      <a href="#digs">Find Digs</a>
+      <a href="#groups">Detecting Groups</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h2>Your Next Adventure Starts Here</h2>
+    <p>Find metal detecting digs, discover groups and
+       explore upcoming events across the UK.</p>
+    <a class="button" href="#digs">Explore Digs</a>
+  </section>
+
+  <section class="features">
+    <div class="feature" id="digs">
+      <h2>Find Upcoming Digs</h2>
+      <p>Discover detecting events by location,
+         date and organising group.</p>
+    </div>
+
+    <div class="feature" id="groups">
+      <h2>For Detecting Groups</h2>
+      <p>Advertise your digs and reach detectorists
+         across the country.</p>
+      <p>Group subscriptions from £5 per month.</p>
+    </div>
+
+    <div class="feature" id="about">
+      <h2>Supporting Signals of Hope</h2>
+      <p>SOH Digs helps support the wider work of
+         Signals of Hope Detecting.</p>
+      <a href="https://www.signalsofhope.co.uk">
+        Visit Signals of Hope
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    SOH Digs | Sometimes you find gold.
+    Sometimes you find peace.
+  </footer>
+
+</body>
+</html>
