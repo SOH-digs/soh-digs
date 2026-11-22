@@ -368,9 +368,64 @@ const editButton = document.createElement("button");
 editButton.type = "button";
 editButton.textContent = "Edit Dig";
 
+
 editButton.addEventListener("click", () => {
-  alert("Editing: " + dig.title);
+  const existingForm = document.getElementById("editDigForm");
+
+  if (existingForm) {
+    existingForm.remove();
+  }
+
+  const form = document.createElement("form");
+  form.id = "editDigForm";
+  form.style.marginTop = "20px";
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Edit: " + dig.title;
+  form.appendChild(heading);
+
+  const fields = [
+    ["Dig Title", "title", "text", dig.title],
+    ["Town", "town", "text", dig.town],
+    ["County", "county", "text", dig.county],
+    ["Price (£)", "price_gbp", "number", dig.price_gbp]
+  ];
+
+  fields.forEach(([labelText, name, type, value]) => {
+    const label = document.createElement("label");
+    label.textContent = labelText;
+
+    const input = document.createElement("input");
+    input.name = name;
+    input.type = type;
+    input.value = value ?? "";
+    input.required = true;
+
+    if (type === "number") {
+      input.min = "0";
+      input.step = "0.01";
+    }
+
+    input.style.display = "block";
+    input.style.margin = "8px 0 18px";
+    input.style.padding = "10px";
+    input.style.width = "100%";
+
+    form.append(label, input);
+  });
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.textContent = "Close Editor";
+
+  cancelButton.addEventListener("click", () => {
+    form.remove();
+  });
+
+  form.appendChild(cancelButton);
+  card.appendChild(form);
 });
+
 
 card.append(heading, details, status, editButton);
 
