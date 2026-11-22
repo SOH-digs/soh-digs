@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Organiser Dashboard | SOH Digs</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f3f5f0;
+  color: #24382c;
+}
+header {
+  background: #173e2b;
+  color: white;
+  padding: 22px;
+  text-align: center;
+}
+header h1 {
+  margin: 0;
+  color: #e7c46a;
+}
+nav { margin-top: 15px; }
+nav a {
+  color: white;
+  margin: 0 12px;
+}
+main {
+  max-width: 1000px;
+  margin: 35px auto;
+  padding: 0 18px;
+}
+.card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 12px #00000012;
+}
+h2, h3 { color: #173e2b; }
+button {
+  background: #217b45;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+button:disabled { opacity: .6; }
+#dashboard { display: none; }
+.status { color: #59685d; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SOH Digs</h1>
+  <p>Organiser Dashboard</p>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="digs.html">Find Digs</a>
+  </nav>
+</header>
+
+<main>
+  <p id="status" role="status" aria-live="polite">
+    Checking your organiser access...
+  </p>
+
+  <section id="dashboard">
+    <div class="card">
+      <h2>Welcome to your dashboard</h2>
+      <p id="accountEmail"></p>
+      <p id="groupDetails"></p>
+      <p id="roleDetails"></p>
+      <button id="logoutButton">Sign Out</button>
+    </div>
+
+    <div class="card">
+      <h3>Manage Your Digs</h3>
+      <p>
+        Soon you'll be able to create, edit and
+        manage your detecting events here.
+      </p>
+      <button disabled>Add New Dig — Coming Soon</button>
+    </div>
+
+    <div class="card">
+      <h3>Group Management</h3>
+      <p>
+        Manage your group's profile, organisers
+        and event information.
+      </p>
+      <button disabled>Edit Group — Coming Soon</button>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL, SUPABASE_KEY
+);
+
+const statusEl = document.getElementById("status");
+const dashboard = document.getElementById("dashboard");
+
+async function loadDashboard() {
+  try {
+    const { data: authData, error: authError } =
+      await db.auth.getUser();
+
+    if (authError || !authData.user) {
+      window.location.replace("login.html");
+      return;
+    }
+
+    const user = authData.user;
+
+    const { data: memberships, error: memberError } =
+      await db.from("group_organisers")
+        .select("group_id, role")
+        .eq("user_id", user.id)
+        .limit(1);
+
+    if (memberError) throw memberError;
+
+    if (!memberships || memberships.length === 0) {
+      statusEl.textContent =
+        "Your account does not have organiser access.";
+      return;
+    }
+
+    const membership = memberships[0];
+
+    document.getElementById("accountEmail")
+      .textContent = "Signed in as: " + user.email;
+
+    document.getElementById("groupDetails")
+      .textContent =
+        "Group ID: " + membership.group_id;
+
+    document.getElementById("roleDetails")
+      .textContent =
+        "Your role: " + membership.role;
+
+    statusEl.textContent = "";
+    dashboard.style.display = "block";
+
+  } catch (error) {
+    console.error(error);
+    statusEl.textContent =
+      "Unable to load your dashboard. Please try again.";
+  }
+}
+
+document.getElementById("logoutButton")
+  .addEventListener("click", async () => {
+    await db.auth.signOut();
+    window.location.replace("login.html");
+  });
+
+loadDashboard();
+</script>
+
+</body>
+</html>
