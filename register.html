@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register Your Group | SOH Digs</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5ef;
+      color: #253329;
+    }
+    header {
+      background: #173d2d;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+    header h1 { color: #e7c46a; margin: 0 0 8px; }
+    nav a { color: white; margin: 0 12px; }
+    main {
+      max-width: 750px;
+      margin: 35px auto;
+      padding: 0 18px;
+    }
+    .panel {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 3px 15px #00000012;
+    }
+    h2 { color: #173d2d; }
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 18px 0 7px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      font: inherit;
+    }
+    textarea { min-height: 110px; }
+    .check {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin: 20px 0;
+    }
+    .check input { width: auto; margin-top: 4px; }
+    .check label { margin: 0; font-weight: normal; }
+    button {
+      background: #173d2d;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 7px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .note { color: #626b63; font-size: 14px; }
+    footer { text-align: center; padding: 25px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SOH Digs</h1>
+    <p>Find Your Next Detecting Adventure</p>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="digs.html">Find Digs</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="panel">
+      <h2>Register Your Detecting Group</h2>
+      <p>
+        Join SOH Digs and help detectorists discover
+        your upcoming events across the UK.
+      </p>
+      <p class="note">
+        All new groups require administrator approval
+        before they can publish events.
+      </p>
+
+      <form id="registrationForm">
+        <label for="groupName">Detecting Group Name *</label>
+        <input id="groupName" required maxlength="120">
+
+        <label for="organiserName">Organiser's Full Name *</label>
+        <input id="organiserName" required maxlength="120">
+
+        <label for="email">Contact Email *</label>
+        <input id="email" type="email" required>
+
+        <label for="county">Home County *</label>
+        <input id="county" required maxlength="100"
+               placeholder="e.g. Essex">
+
+        <label for="otherCounties">
+          Additional Counties Covered
+        </label>
+        <input id="otherCounties"
+               placeholder="e.g. Suffolk, Norfolk">
+
+        <label for="description">About Your Group *</label>
+        <textarea id="description" required
+          placeholder="Tell us about your group and digs."></textarea>
+
+        <label for="website">Website or Facebook Page</label>
+        <input id="website" type="url"
+          placeholder="https://">
+
+        <div class="check">
+          <input type="checkbox" id="age" required>
+          <label for="age">
+            I confirm that I am aged 18 or over.
+          </label>
+        </div>
+
+        <div class="check">
+          <input type="checkbox" id="terms" required>
+          <label for="terms">
+            I understand that registration is subject
+            to approval and agree to follow the
+            SOH Digs rules and terms when provided.
+          </label>
+        </div>
+
+        <button type="submit" id="submitButton">
+          Submit Registration
+        </button>
+        <p id="message" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    SOH Digs | Supporting Signals of Hope Detecting
+  </footer>
+
+  <script>
+    document.getElementById("registrationForm")
+      .addEventListener("submit", function(event) {
+        event.preventDefault();
+        document.getElementById("message").textContent =
+          "The form is being prepared. " +
+          "Registration submissions are not yet enabled.";
+      });
+  </script>
+</body>
+</html>
