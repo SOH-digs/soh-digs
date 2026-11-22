@@ -384,12 +384,29 @@ editButton.addEventListener("click", () => {
   heading.textContent = "Edit: " + dig.title;
   form.appendChild(heading);
 
-  const fields = [
-    ["Dig Title", "title", "text", dig.title],
-    ["Town", "town", "text", dig.town],
-    ["County", "county", "text", dig.county],
-    ["Price (£)", "price_gbp", "number", dig.price_gbp]
-  ];
+  
+const toDateTimeLocal = (dateValue) => {
+  if (!dateValue) return "";
+
+  const date = new Date(dateValue);
+  const localDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60000
+  );
+
+  return localDate.toISOString().slice(0, 16);
+};
+
+const fields = [
+  ["Dig Title", "title", "text", dig.title],
+  ["Start Date & Time", "start_date", "datetime-local",
+    toDateTimeLocal(dig.start_date)],
+  ["End Date & Time", "end_date", "datetime-local",
+    toDateTimeLocal(dig.end_date)],
+  ["Town", "town", "text", dig.town],
+  ["County", "county", "text", dig.county],
+  ["Price (£)", "price_gbp", "number", dig.price_gbp]
+];
+
 
   fields.forEach(([labelText, name, type, value]) => {
     const label = document.createElement("label");
