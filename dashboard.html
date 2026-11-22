@@ -602,6 +602,62 @@ unpublishButton.addEventListener("click", async () => {
   }
 });
 
+const republishButton = document.createElement("button");
+republishButton.type = "button";
+republishButton.textContent = "Republish Dig";
+republishButton.style.marginLeft = "10px";
+
+republishButton.addEventListener("click", async () => {
+  if (dig.is_cancelled) {
+    alert(
+      "This dig is cancelled. It must be reinstated before republishing."
+    );
+    return;
+  }
+
+  if (dig.is_published) {
+    alert("This dig is already published.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to republish " + dig.title + "?"
+  );
+
+  if (!confirmed) return;
+
+  republishButton.disabled = true;
+  republishButton.textContent = "Republishing...";
+
+  try {
+    const { data: updated, error } = await db
+      .from("digs")
+      .update({ is_published: true })
+      .eq("id", dig.id)
+      .eq("is_cancelled", false)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!updated || updated.length === 0) {
+      throw new Error(
+        "Dig could not be republished. Check its status and permissions."
+      );
+    }
+
+    alert("Dig republished successfully!");
+    await loadMyDigs();
+
+  } catch (error) {
+    alert("Unable to republish dig: " + error.message);
+  } finally {
+    republishButton.disabled = false;
+    republishButton.textContent = "Republish Dig";
+  }
+});
+
+republishButton.disabled = dig.is_published || dig.is_cancelled;
+
 
 card.append(
   heading,
@@ -609,7 +665,8 @@ card.append(
   status,
   editButton,
   cancelDigButton,
-  unpublishButton
+  unpublishButton,
+  republishButton
 );
 
       list.appendChild(card);
