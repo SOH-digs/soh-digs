@@ -136,6 +136,16 @@
     SOH Digs | Sometimes you find gold.
     Sometimes you find peace.
   </footer>
+<script>
+  const SUPABASE_URL = "YOUR_SUPABASE_URL";
+  const SUPABASE_KEY = "YOUR_PUBLISHABLE_KEY";
 
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  console.log("SOH Digs: Supabase connected");
+</script>
 </body>
 </html>
