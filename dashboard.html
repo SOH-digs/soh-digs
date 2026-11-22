@@ -123,6 +123,26 @@ button:disabled { opacity: .6; }
 </div>
 
 
+<div class="card">
+  <h3>Manage My Digs</h3>
+
+  <p>
+    View the detecting events belonging to your group.
+    You'll soon be able to edit, cancel and unpublish
+    events directly from here.
+  </p>
+
+  <button type="button" id="refreshDigsButton">
+    Refresh My Digs
+  </button>
+
+  <p id="myDigsMessage" role="status">
+    Your digs will appear here.
+  </p>
+
+  <div id="myDigsList"></div>
+</div>
+
     <div class="card">
       <h3>Group Management</h3>
       <p>
@@ -279,7 +299,86 @@ document.getElementById("addDigForm")
     }
   });
 
-loadDashboard();
+
+async function loadMyDigs() {
+  const message = document.getElementById("myDigsMessage");
+  const list = document.getElementById("myDigsList");
+
+  message.textContent = "Loading your digs...";
+  list.replaceChildren();
+
+  try {
+    const { data: authData, error: authError } =
+      await db.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw new Error("Please sign in again.");
+    }
+
+    const { data: memberships, error: membershipError } =
+      await db.from("group_organisers")
+        .select("group_id")
+        .eq("user_id", authData.user.id);
+
+    if (membershipError) throw membershipError;
+
+    if (!memberships || memberships.length === 0) {
+      throw new Error("No authorised groups found.");
+    }
+
+    const groupIds = memberships.map(item => item.group_id);
+
+    const { data: digs, error: digsError } =
+      await db.from("digs")
+        .select("id, title, start_date, town, county, price_gbp, is_published, is_cancelled")
+        .in("group_id", groupIds)
+        .order("start_date", { ascending: true });
+
+    if (digsError) throw digsError;
+
+    if (!digs || digs.length === 0) {
+      message.textContent = "You have no digs listed yet.";
+      return;
+    }
+
+    message.textContent = "Your group's digs:";
+
+    digs.forEach(dig => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const heading = document.createElement("h3");
+      heading.textContent = dig.title;
+
+      const details = document.createElement("p");
+      details.textContent =
+        new Date(dig.start_date).toLocaleString("en-GB") +
+        " | " + dig.town + ", " + dig.county +
+        " | £" + Number(dig.price_gbp || 0).toFixed(2);
+
+      const status = document.createElement("p");
+      status.textContent = dig.is_cancelled
+        ? "Cancelled"
+        : dig.is_published
+          ? "Published"
+          : "Unpublished";
+
+      card.append(heading, details, status);
+      list.appendChild(card);
+    });
+
+  } catch (error) {
+    console.error(error);
+    message.textContent =
+      "Unable to load your digs: " + error.message;
+  }
+}
+
+document.getElementById("refreshDigsButton")
+  .addEventListener("click", loadMyDigs);
+
+  loadDashboard();
+  loadMyDigs();
 </script>
 
 </body>
