@@ -146,14 +146,61 @@
     SOH Digs | Supporting Signals of Hope Detecting
   </footer>
 
-  <script>
-    document.getElementById("registrationForm")
-      .addEventListener("submit", function(event) {
-        event.preventDefault();
-        document.getElementById("message").textContent =
-          "The form is being prepared. " +
-          "Registration submissions are not yet enabled.";
-      });
-  </script>
+  
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  // Paste your two existing Supabase connection lines here.
+  const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  const form = document.getElementById("registrationForm");
+  const message = document.getElementById("message");
+  const button = document.getElementById("submitButton");
+
+  form.addEventListener("submit", async function(event) {
+    event.preventDefault();
+
+    button.disabled = true;
+    message.textContent = "Submitting your application...";
+
+    const application = {
+      group_name: document.getElementById("groupName").value.trim(),
+      organiser_name: document.getElementById("organiserName").value.trim(),
+      contact_email: document.getElementById("email").value.trim(),
+      home_county: document.getElementById("county").value.trim(),
+      additional_counties: document.getElementById("otherCounties").value.trim(),
+      description: document.getElementById("description").value.trim(),
+      website_url: document.getElementById("website").value.trim() || null
+    };
+
+    try {
+      const { error } = await db
+        .from("group_applications")
+        .insert(application);
+
+      if (error) throw error;
+
+      message.textContent =
+        "Thank you! Your application has been submitted " +
+        "and is awaiting approval.";
+
+      form.reset();
+    } catch (error) {
+      console.error("Registration error:", error);
+      message.textContent =
+        "Sorry, your application could not be submitted. " +
+        "Please try again later.";
+    } finally {
+      button.disabled = false;
+    }
+  });
+</script>
+
 </body>
 </html>
