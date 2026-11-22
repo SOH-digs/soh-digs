@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find a Dig | SOH Digs</title>
+<style>
+:root {
+  --green:#174d40;
+  --gold:#d9ad51;
+  --light:#f5f7f4;
+  --ink:#20312d;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:var(--light);
+  color:var(--ink);
+}
+header {
+  background:var(--green);
+  color:white;
+  padding:22px 6%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.logo { font-size:26px; font-weight:bold; }
+.logo span { color:var(--gold); }
+nav a {
+  color:white;
+  text-decoration:none;
+  margin-left:20px;
+}
+.hero {
+  background:linear-gradient(130deg,#174d40,#28735d);
+  color:white;
+  text-align:center;
+  padding:55px 20px;
+}
+.hero h1 { font-size:38px; margin:0 0 12px; }
+.hero p { line-height:1.6; }
+.container {
+  max-width:1100px;
+  margin:auto;
+  padding:30px 18px;
+}
+.filters {
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:12px;
+  margin-bottom:22px;
+}
+input,select,button {
+  padding:13px;
+  border:1px solid #cbd4ce;
+  border-radius:9px;
+  font-size:15px;
+}
+button { cursor:pointer; }
+.tabs {
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+.tabs button {
+  background:white;
+  color:var(--green);
+}
+.tabs button.active {
+  background:var(--green);
+  color:white;
+}
+.cards {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(270px,1fr));
+  gap:20px;
+}
+.card {
+  background:white;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 4px 16px #00000012;
+}
+.card-top {
+  background:linear-gradient(120deg,#285b4b,#92a98c);
+  color:white;
+  padding:25px;
+}
+.card-top small {
+  background:#ffffff25;
+  padding:6px 10px;
+  border-radius:20px;
+}
+.card-body { padding:20px; }
+.card h2 { font-size:21px; }
+.meta { line-height:1.9; color:#52625c; }
+.details {
+  background:var(--green);
+  color:white;
+  border:0;
+  width:100%;
+  margin-top:12px;
+}
+.notice {
+  background:#fff4d7;
+  padding:14px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+.calendar {
+  background:white;
+  border-radius:14px;
+  padding:20px;
+}
+.calendar-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+.weekdays,.days {
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+}
+.weekdays div {
+  text-align:center;
+  padding:12px 0;
+  font-weight:bold;
+}
+.day {
+  min-height:76px;
+  border:1px solid #e2e8e2;
+  border-radius:7px;
+  padding:7px;
+  overflow-wrap:anywhere;
+}
+.day.has-event {
+  background:#e2f0e8;
+  border-color:#83b29b;
+}
+.event-label {
+  display:block;
+  font-size:11px;
+  margin-top:6px;
+  color:var(--green);
+  font-weight:bold;
+}
+.hidden { display:none; }
+.empty { padding:30px; text-align:center; }
+dialog {
+  border:0;
+  border-radius:15px;
+  padding:25px;
+  max-width:500px;
+  width:90%;
+}
+dialog::backdrop { background:#0009; }
+footer {
+  text-align:center;
+  background:#123b32;
+  color:white;
+  padding:30px;
+  margin-top:40px;
+}
+footer a { color:#f1cc7c; }
+@media(max-width:650px) {
+  .filters { grid-template-columns:1fr; }
+  .hero h1 { font-size:30px; }
+  .day { min-height:58px; font-size:12px; }
+  .event-label { font-size:9px; }
+  nav a { margin:0 12px 0 0; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">SOH <span>Digs</span></div>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="digs.html">Find a Dig</a>
+    <a href="https://www.signalsofhope.co.uk"
+       target="_blank" rel="noopener">Signals of Hope</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Find Your Next Dig</h1>
+  <p>Discover metal detecting events across the UK.<br>
+     Search by county, date or organiser.</p>
+</section>
+
+<main class="container">
+  <div class="notice">
+    <strong>Demonstration:</strong>
+    The events below are fictional examples, not real digs
+    or available bookings.
+  </div>
+
+  <div class="filters">
+    <input id="search" placeholder="Search digs or organisers">
+    <select id="county">
+      <option value="">All counties</option>
+    </select>
+    <input id="date" type="date" aria-label="Filter by date">
+  </div>
+
+  <div class="tabs">
+    <button id="listTab" class="active">List View</button>
+    <button id="calendarTab">Calendar View</button>
+  </div>
+
+  <section id="listView">
+    <p id="count"></p>
+    <div id="cards" class="cards"></div>
+  </section>
+
+  <section id="calendarView" class="calendar hidden">
+    <div class="calendar-header">
+      <button id="prevMonth" aria-label="Previous month">←</button>
+      <h2 id="monthTitle"></h2>
+      <button id="nextMonth" aria-label="Next month">→</button>
+    </div>
+    <div class="weekdays">
+      <div>Mon</div><div>Tue</div><div>Wed</div>
+      <div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+    </div>
+    <div id="days" class="days"></div>
+  </section>
+</main>
+
+<dialog id="eventDialog">
+  <div id="dialogContent"></div>
+  <button id="closeDialog">Close</button>
+</dialog>
+
+<footer>
+  <p>SOH Digs | Sometimes you find gold.
+     Sometimes you find peace.</p>
+  <p>
+    Supporting
+    <a href="https://www.signalsofhope.co.uk"
+       target="_blank" rel="noopener">
+       Signals of Hope Detecting
+    </a>
+  </p>
+</footer>
+
+<script>
+// Demonstration events only.
+// Replace with approved organiser data in a later stage.
+const today = new Date();
+const futureDate = (days) => {
+  const d = new Date(today.getFullYear(),today.getMonth(),
+                     today.getDate()+days);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+};
+
+const events = [
+  {
+    id:1,
+    title:"Essex Weekend Detecting",
+    county:"Essex",
+    location:"Near Colchester",
+    date:futureDate(7),
+    organiser:"Example Essex Detecting Group",
+    price:"£20",
+    description:"A fictional example of a countryside detecting day."
+  },
+  {
+    id:2,
+    title:"Suffolk Sunday Dig",
+    county:"Suffolk",
+    location:"Near Ipswich",
+    date:futureDate(14),
+    organiser:"Example Suffolk Detecting Group",
+    price:"£15",
+    description:"A demonstration listing showing how a dig appears."
+  },
+  {
+    id:3,
+    title:"Kent Fields Rally",
+    county:"Kent",
+    location:"Near Canterbury",
+    date:futureDate(21),
+    organiser:"Example Kent Detecting Group",
+    price:"£25",
+    description:"An example rally listing, not an actual event."
+  }
+];
+
+const $ = id => document.getElementById(id);
+const search = $("search");
+const county = $("county");
+const date = $("date");
+const cards = $("cards");
+const days = $("days");
+let calendarMonth = new Date(today.getFullYear(),today.getMonth(),1);
+
+for (const name of [...new Set(events.map(e=>e.county))].sort()) {
+  const option=document.createElement("option");
+  option.value=name;
+  option.textContent=name;
+  county.appendChild(option);
+}
+
+function formatDate(value) {
+  return new Date(value+"T12:00:00").toLocaleDateString("en-GB",{
+    weekday:"short",day:"numeric",month:"long",year:"numeric"
+  });
+}
+
+function filteredEvents() {
+  const query=search.value.trim().toLowerCase();
+  return events.filter(e=>
+    (!query ||
+      [e.title,e.organiser,e.location,e.county]
+        .some(v=>v.toLowerCase().includes(query))) &&
+    (!county.value || e.county===county.value) &&
+    (!date.value || e.date===date.value)
+  );
+}
+
+function addText(parent,tag,text,className) {
+  const el=document.createElement(tag);
+  el.textContent=text;
+  if(className) el.className=className;
+  parent.appendChild(el);
+  return el;
+}
+
+function renderList() {
+  const filtered=filteredEvents();
+  cards.replaceChildren();
+  $("count").textContent=filtered.length+
+    (filtered.length===1?" example dig":" example digs")+" found";
+
+  if(!filtered.length) {
+    addText(cards,"p","No matching example digs found.","empty");
+    return;
+  }
+
+  filtered.forEach(e=>{
+    const card=document.createElement("article");
+    card.className="card";
+    const top=document.createElement("div");
+    top.className="card-top";
+    addText(top,"small","EXAMPLE EVENT");
+    addText(top,"h2",e.title);
+    const body=document.createElement("div");
+    body.className="card-body";
+    addText(body,"p","📅 "+formatDate(e.date),"meta");
+    addText(body,"p","📍 "+e.location+", "+e.county,"meta");
+    addText(body,"p","👥 "+e.organiser,"meta");
+    addText(body,"p","Example price: "+e.price);
+    const button=document.createElement("button");
+    button.className="details";
+    button.textContent="View Details";
+    button.addEventListener("click",()=>showDetails(e));
+    body.appendChild(button);
+    card.append(top,body);
+    cards.appendChild(card);
+  });
+}
+
+function showDetails(e) {
+  const content=$("dialogContent");
+  content.replaceChildren();
+  addText(content,"h2",e.title);
+  addText(content,"p","Demonstration event — not bookable.");
+  addText(content,"p","Date: "+formatDate(e.date));
+  addText(content,"p","Location: "+e.location+", "+e.county);
+  addText(content,"p","Organiser: "+e.organiser);
+  addText(content,"p","Example price: "+e.price);
+  addText(content,"p",e.description);
+  $("eventDialog").showModal();
+}
+
+function renderCalendar() {
+  days.replaceChildren();
+  $("monthTitle").textContent=calendarMonth.toLocaleDateString(
+    "en-GB",{month:"long",year:"numeric"}
+  );
+  const year=calendarMonth.getFullYear();
+  const month=calendarMonth.getMonth();
+  const first=new Date(year,month,1);
+  const offset=(first.getDay()+6)%7;
+  const total=new Date(year,month+1,0).getDate();
+  for(let i=0;i<offset;i++) {
+    days.appendChild(document.createElement("div"));
+  }
+  for(let n=1;n<=total;n++) {
+    const day=document.createElement("div");
+    day.className="day";
+    addText(day,"strong",String(n));
+    const key=`${year}-${String(month+1).padStart(2,"0")}-${String(n).padStart(2,"0")}`;
+    const matches=filteredEvents().filter(e=>e.date===key);
+    if(matches.length) day.classList.add("has-event");
+    matches.forEach(e=>{
+      const button=document.createElement("button");
+      button.className="event-label";
+      button.textContent=e.title;
+      button.style.padding="4px";
+      button.style.width="100%";
+      button.addEventListener("click",()=>showDetails(e));
+      day.appendChild(button);
+    });
+    days.appendChild(day);
+  }
+}
+
+function refresh() {
+  renderList();
+  renderCalendar();
+}
+[search,county,date].forEach(el=>el.addEventListener("input",refresh));
+
+$("listTab").addEventListener("click",()=>{
+  $("listView").classList.remove("hidden");
+  $("calendarView").classList.add("hidden");
+  $("listTab").classList.add("active");
+  $("calendarTab").classList.remove("active");
+});
+$("calendarTab").addEventListener("click",()=>{
+  $("calendarView").classList.remove("hidden");
+  $("listView").classList.add("hidden");
+  $("calendarTab").classList.add("active");
+  $("listTab").classList.remove("active");
+  renderCalendar();
+});
+$("prevMonth").addEventListener("click",()=>{
+  calendarMonth.setMonth(calendarMonth.getMonth()-1);
+  renderCalendar();
+});
+$("nextMonth").addEventListener("click",()=>{
+  calendarMonth.setMonth(calendarMonth.getMonth()+1);
+  renderCalendar();
+});
+$("closeDialog").addEventListener("click",()=>$("eventDialog").close());
+refresh();
+</script>
+</body>
+</html>
