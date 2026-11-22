@@ -330,7 +330,9 @@ async function loadMyDigs() {
 
     const { data: digs, error: digsError } =
       await db.from("digs")
-        .select("id, title, start_date, town, county, price_gbp, is_published, is_cancelled")
+       
+.select("id, title, start_date, end_date, town, county, price_gbp, is_published, is_cancelled")
+
         .in("group_id", groupIds)
         .order("start_date", { ascending: true });
 
@@ -438,6 +440,70 @@ const fields = [
   cancelButton.addEventListener("click", () => {
     form.remove();
   });
+
+const saveButton = document.createElement("button");
+saveButton.type = "submit";
+saveButton.textContent = "Save Changes";
+saveButton.style.marginRight = "10px";
+
+form.appendChild(saveButton);
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving...";
+
+  try {
+    const values = new FormData(form);
+
+    const start = values.get("start_date");
+    const end = values.get("end_date");
+    const price = Number(values.get("price_gbp"));
+
+    if (!start || !end || new Date(end) <= new Date(start)) {
+      throw new Error("End date must be after start date.");
+    }
+
+    if (!Number.isFinite(price) || price < 0) {
+      throw new Error("Please enter a valid price.");
+    }
+
+    const updates = {
+      title: String(values.get("title")).trim(),
+      start_date: new Date(start).toISOString(),
+      end_date: new Date(end).toISOString(),
+      town: String(values.get("town")).trim(),
+      county: String(values.get("county")).trim(),
+      price_gbp: price
+    };
+
+    if (!updates.title || !updates.town || !updates.county) {
+      throw new Error("Please complete all required fields.");
+    }
+
+    const { data: updated, error } = await db
+      .from("digs")
+      .update(updates)
+      .eq("id", dig.id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!updated || updated.length === 0) {
+      throw new Error("Update not permitted or dig not found.");
+    }
+
+    alert("Dig updated successfully!");
+    await loadMyDigs();
+
+  } catch (error) {
+    alert("Unable to save changes: " + error.message);
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = "Save Changes";
+  }
+});
 
   form.appendChild(cancelButton);
   card.appendChild(form);
