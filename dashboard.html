@@ -79,14 +79,49 @@ button:disabled { opacity: .6; }
       <button id="logoutButton">Sign Out</button>
     </div>
 
-    <div class="card">
-      <h3>Manage Your Digs</h3>
-      <p>
-        Soon you'll be able to create, edit and
-        manage your detecting events here.
-      </p>
-      <button disabled>Add New Dig — Coming Soon</button>
-    </div>
+    
+<div class="card">
+  <h3>Add New Dig</h3>
+  <p>Enter the details of your detecting event below.</p>
+
+  <form id="addDigForm">
+
+    <label for="digTitle">Dig Title</label><br>
+    <input type="text" id="digTitle" required><br><br>
+
+    <label for="digDescription">Description</label><br>
+    <textarea id="digDescription" rows="4"></textarea><br><br>
+
+    <label for="digStart">Start Date and Time</label><br>
+    <input type="datetime-local" id="digStart" required><br><br>
+
+    <label for="digEnd">End Date and Time</label><br>
+    <input type="datetime-local" id="digEnd" required><br><br>
+
+    <label for="digTown">Town</label><br>
+    <input type="text" id="digTown" required><br><br>
+
+    <label for="digCounty">County</label><br>
+    <input type="text" id="digCounty" required><br><br>
+
+    <label for="digPrice">Price (£)</label><br>
+    <input type="number" id="digPrice"
+           min="0" step="0.01" value="0"><br><br>
+
+    <label for="digFacebook">Facebook Event Link (optional)</label><br>
+    <input type="url" id="digFacebook"><br><br>
+
+    <label for="digYouTube">YouTube Link (optional)</label><br>
+    <input type="url" id="digYouTube"><br><br>
+
+    <button type="submit" id="publishDigButton">
+  Publish Dig
+</button>
+<p id="digFormMessage" role="status"></p>
+
+  </form>
+</div>
+
 
     <div class="card">
       <h3>Group Management</h3>
@@ -164,6 +199,84 @@ document.getElementById("logoutButton")
   .addEventListener("click", async () => {
     await db.auth.signOut();
     window.location.replace("login.html");
+  });
+
+document.getElementById("addDigForm")
+  .addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const message = document.getElementById("digFormMessage");
+    const button = document.getElementById("publishDigButton");
+
+    message.textContent = "Publishing your dig...";
+    button.disabled = true;
+
+    try {
+      const { data: authData, error: authError } =
+        await db.auth.getUser();
+
+      if (authError || !authData.user) {
+        throw new Error("Please sign in again.");
+      }
+
+      const { data: memberships, error: membershipError } =
+        await db.from("group_organisers")
+          .select("group_id")
+          .eq("user_id", authData.user.id)
+          .limit(1);
+
+      if (membershipError) throw membershipError;
+
+      if (!memberships || memberships.length === 0) {
+        throw new Error("No authorised detecting group found.");
+      }
+
+      const start = document.getElementById("digStart").value;
+      const end = document.getElementById("digEnd").value;
+
+      if (new Date(end) <= new Date(start)) {
+        throw new Error("End date must be after start date.");
+      }
+
+      const price = Number(
+        document.getElementById("digPrice").value || 0
+      );
+
+      if (!Number.isFinite(price) || price < 0) {
+        throw new Error("Please enter a valid price.");
+      }
+
+      const dig = {
+        group_id: memberships[0].group_id,
+        title: document.getElementById("digTitle").value.trim(),
+        description: document.getElementById("digDescription").value.trim(),
+        start_date: new Date(start).toISOString(),
+        end_date: new Date(end).toISOString(),
+        town: document.getElementById("digTown").value.trim(),
+        county: document.getElementById("digCounty").value.trim(),
+        price_gbp: price,
+        facebook_event_url:
+          document.getElementById("digFacebook").value.trim() || null,
+        youtube_url:
+          document.getElementById("digYouTube").value.trim() || null,
+        is_published: true,
+        is_private: false,
+        is_cancelled: false
+      };
+
+      const { error } = await db.from("digs").insert(dig);
+
+      if (error) throw error;
+
+      message.textContent = "Your dig has been published successfully!";
+      document.getElementById("addDigForm").reset();
+
+    } catch (error) {
+      console.error(error);
+      message.textContent = "Unable to publish: " + error.message;
+    } finally {
+      button.disabled = false;
+    }
   });
 
 loadDashboard();
