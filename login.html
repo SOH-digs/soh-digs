@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Organiser Login | SOH Digs</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f2f5f1;
+      color: #24372c;
+    }
+    header {
+      background: #173e2b;
+      color: white;
+      padding: 22px;
+      text-align: center;
+    }
+    header h1 { margin: 0 0 8px; }
+    main {
+      max-width: 440px;
+      margin: 60px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 5px 25px #00000012;
+    }
+    h2 { margin-top: 0; }
+    label {
+      display: block;
+      margin: 18px 0 7px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #aebbb0;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 24px;
+      background: #217b45;
+      color: white;
+      border: 0;
+      border-radius: 7px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; }
+    #message { margin-top: 16px; }
+    .links { margin-top: 22px; text-align: center; }
+    a { color: #17683b; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SOH Digs</h1>
+    <div>Organiser Portal</div>
+  </header>
+
+  <main>
+    <h2>Organiser Login</h2>
+    <p>Sign in to manage your detecting group.</p>
+
+    <form id="loginForm">
+      <label for="email">Email address</label>
+      <input id="email" type="email"
+             autocomplete="username" required>
+
+      <label for="password">Password</label>
+      <input id="password" type="password"
+             autocomplete="current-password" required>
+
+      <button id="loginButton" type="submit">
+        Sign In
+      </button>
+      <p id="message" role="status"
+         aria-live="polite"></p>
+    </form>
+
+    <div class="links">
+      <a href="index.html">Back to SOH Digs</a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL =
+      "https://vibhttgthmsxxsbgdbqk.supabase.co";
+    const SUPABASE_KEY =
+      "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL, SUPABASE_KEY
+    );
+
+    const form = document.getElementById("loginForm");
+    const button = document.getElementById("loginButton");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      message.textContent = "Signing in...";
+
+      try {
+        const email =
+          document.getElementById("email").value.trim();
+        const password =
+          document.getElementById("password").value;
+
+        const { data, error } =
+          await db.auth.signInWithPassword({
+            email, password
+          });
+
+        if (error) throw error;
+
+        const { data: membership, error: memberError } =
+          await db.from("group_organisers")
+            .select("group_id, role")
+            .eq("user_id", data.user.id)
+            .limit(1);
+
+        if (memberError) throw memberError;
+
+        if (!membership || membership.length === 0) {
+          await db.auth.signOut();
+          message.textContent =
+            "No organiser access is linked to this account.";
+          return;
+        }
+
+        message.textContent =
+          "Login successful! Organiser access confirmed.";
+      } catch (error) {
+        console.error(error);
+        message.textContent =
+          "Unable to sign in or verify organiser access.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
