@@ -510,7 +510,32 @@ form.addEventListener("submit", async (event) => {
 });
 
 
-card.append(heading, details, status, editButton);
+const cancelDigButton = document.createElement("button");
+cancelDigButton.type = "button";
+cancelDigButton.textContent = "Cancel Dig";
+cancelDigButton.style.marginLeft = "10px";
+
+cancelDigButton.addEventListener("click", () => {
+  alert("Cancel Dig: " + dig.title);
+});
+
+const unpublishButton = document.createElement("button");
+unpublishButton.type = "button";
+unpublishButton.textContent = "Unpublish Dig";
+unpublishButton.style.marginLeft = "10px";
+
+unpublishButton.addEventListener("click", () => {
+  alert("Unpublish Dig: " + dig.title);
+});
+
+card.append(
+  heading,
+  details,
+  status,
+  editButton,
+  cancelDigButton,
+  unpublishButton
+);
 
       list.appendChild(card);
     });
