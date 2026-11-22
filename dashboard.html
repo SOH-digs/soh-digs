@@ -515,18 +515,93 @@ cancelDigButton.type = "button";
 cancelDigButton.textContent = "Cancel Dig";
 cancelDigButton.style.marginLeft = "10px";
 
-cancelDigButton.addEventListener("click", () => {
-  alert("Cancel Dig: " + dig.title);
+
+cancelDigButton.addEventListener("click", async () => {
+  if (dig.is_cancelled) {
+    alert("This dig is already cancelled.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to cancel " + dig.title + "?"
+  );
+
+  if (!confirmed) return;
+
+  cancelDigButton.disabled = true;
+  cancelDigButton.textContent = "Cancelling...";
+
+  try {
+    const { data: updated, error } = await db
+      .from("digs")
+      .update({ is_cancelled: true })
+      .eq("id", dig.id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!updated || updated.length === 0) {
+      throw new Error("You do not have permission to cancel this dig.");
+    }
+
+    alert("Dig cancelled successfully!");
+    await loadMyDigs();
+
+  } catch (error) {
+    alert("Unable to cancel dig: " + error.message);
+  } finally {
+    cancelDigButton.disabled = false;
+    cancelDigButton.textContent = "Cancel Dig";
+  }
 });
+
 
 const unpublishButton = document.createElement("button");
 unpublishButton.type = "button";
 unpublishButton.textContent = "Unpublish Dig";
 unpublishButton.style.marginLeft = "10px";
 
-unpublishButton.addEventListener("click", () => {
-  alert("Unpublish Dig: " + dig.title);
+
+unpublishButton.addEventListener("click", async () => {
+  if (!dig.is_published) {
+    alert("This dig is already unpublished.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Are you sure you want to unpublish " + dig.title +
+    "? It will no longer appear in public dig listings."
+  );
+
+  if (!confirmed) return;
+
+  unpublishButton.disabled = true;
+  unpublishButton.textContent = "Unpublishing...";
+
+  try {
+    const { data: updated, error } = await db
+      .from("digs")
+      .update({ is_published: false })
+      .eq("id", dig.id)
+      .select("id");
+
+    if (error) throw error;
+
+    if (!updated || updated.length === 0) {
+      throw new Error("You do not have permission to unpublish this dig.");
+    }
+
+    alert("Dig unpublished successfully!");
+    await loadMyDigs();
+
+  } catch (error) {
+    alert("Unable to unpublish dig: " + error.message);
+  } finally {
+    unpublishButton.disabled = false;
+    unpublishButton.textContent = "Unpublish Dig";
+  }
 });
+
 
 card.append(
   heading,
