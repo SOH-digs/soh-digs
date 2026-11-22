@@ -363,7 +363,17 @@ async function loadMyDigs() {
           ? "Published"
           : "Unpublished";
 
-      card.append(heading, details, status);
+      
+const editButton = document.createElement("button");
+editButton.type = "button";
+editButton.textContent = "Edit Dig";
+
+editButton.addEventListener("click", () => {
+  alert("Editing: " + dig.title);
+});
+
+card.append(heading, details, status, editButton);
+
       list.appendChild(card);
     });
 
