@@ -101,7 +101,34 @@ button:disabled { opacity: .6; }
     </div>
 
     
+<div class="card">
+  <h3>Edit Group Profile</h3>
+  <p>Keep your detecting group's information up to date.</p>
 
+  <label for="groupName">Group Name</label>
+  <input type="text" id="groupName">
+
+  <label for="groupDescription">Description</label>
+  <textarea id="groupDescription" rows="4"></textarea>
+
+  <label for="groupCounty">Home County</label>
+  <input type="text" id="groupCounty">
+
+  <label for="groupEmail">Contact Email</label>
+  <input type="email" id="groupEmail">
+
+  <label for="groupWebsite">Website</label>
+  <input type="url" id="groupWebsite">
+
+  <label for="groupFacebook">Facebook Page</label>
+  <input type="url" id="groupFacebook">
+
+  <button type="button" id="saveGroupProfileButton">
+    Save Group Details
+  </button>
+
+  <p id="groupProfileMessage"></p>
+</div>
 <div class="card">
   <h3>Your Group Logo</h3>
   <p>Upload your detecting group's logo.
@@ -244,12 +271,17 @@ async function loadDashboard() {
 currentGroupId = membership.group_id;
 const { data: groupData, error: groupError } = await db
   .from("detecting_groups")
-  .select("logo_url, name")
+  .select("logo_url, name, description, home_county, contact_email, website_url, facebook_url")
   .eq("id", currentGroupId)
   .single();
 
 if (groupError) throw groupError;
-
+document.getElementById("groupName").value = groupData.name || "";
+document.getElementById("groupDescription").value = groupData.description || "";
+document.getElementById("groupCounty").value = groupData.home_county || "";
+document.getElementById("groupEmail").value = groupData.contact_email || "";
+document.getElementById("groupWebsite").value = groupData.website_url || "";
+document.getElementById("groupFacebook").value = groupData.facebook_url || "";
 if (groupData?.logo_url) {
   const logoPreview = document.getElementById("groupLogoPreview");
   logoPreview.src = groupData.logo_url + "?v=" + Date.now();
@@ -828,6 +860,53 @@ if (saveError) throw saveError;
       message.textContent = "Upload failed: " + error.message;
     }
   });
+  document.getElementById("saveGroupProfileButton").addEventListener("click", async () => {
+  const message = document.getElementById("groupProfileMessage");
+
+  if (!currentGroupId) {
+    message.textContent = "Group not loaded yet.";
+    return;
+  }
+
+  const name = document.getElementById("groupName").value.trim();
+  const description = document.getElementById("groupDescription").value.trim();
+  const home_county = document.getElementById("groupCounty").value.trim();
+  const contact_email = document.getElementById("groupEmail").value.trim();
+  const website_url = document.getElementById("groupWebsite").value.trim();
+  const facebook_url = document.getElementById("groupFacebook").value.trim();
+
+  if (!name) {
+    message.textContent = "Please enter a group name.";
+    return;
+  }
+
+  message.textContent = "Saving group details...";
+
+  const { data, error } = await db
+    .from("detecting_groups")
+    .update({
+      name,
+      description,
+      home_county,
+      contact_email: contact_email || null,
+      website_url: website_url || null,
+      facebook_url: facebook_url || null
+    })
+    .eq("id", currentGroupId)
+    .select("id");
+
+  if (error) {
+    message.textContent = "Save failed: " + error.message;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    message.textContent = "Save failed: No group record was updated.";
+    return;
+  }
+
+  message.textContent = "Group details saved successfully!";
+});
   loadDashboard();
   loadMyDigs();
 </script>
