@@ -244,7 +244,7 @@ async function loadDashboard() {
 currentGroupId = membership.group_id;
 const { data: groupData, error: groupError } = await db
   .from("detecting_groups")
-  .select("logo_url")
+  .select("logo_url, name")
   .eq("id", currentGroupId)
   .single();
 
@@ -260,7 +260,7 @@ if (groupData?.logo_url) {
 
     document.getElementById("groupDetails")
       .textContent =
-        "Group ID: " + membership.group_id;
+ "Group: " + groupData.name;
 
     document.getElementById("roleDetails")
       .textContent =
