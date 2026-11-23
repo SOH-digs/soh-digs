@@ -52,6 +52,27 @@ button {
 button:disabled { opacity: .6; }
 #dashboard { display: none; }
 .status { color: #59685d; }
+
+.group-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: white;
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.logo-upload {
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+
+.logo-upload input {
+  display: block;
+  margin: 10px 0;
+}
+
 </style>
 </head>
 <body>
@@ -80,7 +101,31 @@ button:disabled { opacity: .6; }
     </div>
 
     
+
 <div class="card">
+  <h3>Your Group Logo</h3>
+  <p>Upload your detecting group's logo.
+     You can replace it whenever you wish.</p>
+
+  <div class="logo-upload">
+    <img id="groupLogoPreview"
+         class="group-logo"
+         alt="Your group logo"
+         style="display:none;">
+
+    <input type="file"
+           id="groupLogoFile"
+           accept="image/jpeg,image/png,image/webp">
+
+    <button type="button" id="uploadLogoButton">
+      Upload Group Logo
+    </button>
+
+    <p id="logoMessage"></p>
+  </div>
+</div>
+
+    <div class="card">
   <h3>Add New Dig</h3>
   <p>Enter the details of your detecting event below.</p>
 
@@ -166,6 +211,8 @@ const db = window.supabase.createClient(
 const statusEl = document.getElementById("status");
 const dashboard = document.getElementById("dashboard");
 
+let currentGroupId = null;
+
 async function loadDashboard() {
   try {
     const { data: authData, error: authError } =
@@ -193,6 +240,8 @@ async function loadDashboard() {
     }
 
     const membership = memberships[0];
+
+currentGroupId = membership.group_id;
 
     document.getElementById("accountEmail")
       .textContent = "Signed in as: " + user.email;
@@ -682,6 +731,86 @@ card.append(
 document.getElementById("refreshDigsButton")
   .addEventListener("click", loadMyDigs);
 
+  
+  
+async function uploadGroupLogo(groupId, file) {
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ];
+
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("Please select a JPG, PNG or WebP image.");
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error("Your logo must be smaller than 2 MB.");
+  }
+
+  const extension = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp"
+  }[file.type];
+
+  const filePath = `${groupId}/logo.${extension}`;
+
+  const { error } = await db.storage
+    .from("group-logos")
+    .upload(filePath, file, { upsert: true });
+
+  if (error) throw error;
+
+  return db.storage
+    .from("group-logos")
+    .getPublicUrl(filePath).data.publicUrl;
+}
+document.getElementById("uploadLogoButton")
+  .addEventListener("click", async () => {
+    const message = document.getElementById("logoMessage");
+    const file = document.getElementById("groupLogoFile").files[0];
+
+    if (!file) {
+      message.textContent = "Please choose a logo first.";
+      return;
+    }
+
+    try {
+      const { data: authData, error: authError } =
+        await db.auth.getUser();
+
+      if (authError || !authData.user) {
+        throw new Error("Please sign in first.");
+      }
+
+      const { data: memberships, error: memberError } =
+        await db.from("group_organisers")
+          .select("group_id")
+          .eq("user_id", authData.user.id)
+          .limit(1);
+
+      if (memberError) throw memberError;
+      if (!memberships || memberships.length === 0) {
+        throw new Error("No authorised group found.");
+      }
+
+      message.textContent = "Uploading logo...";
+
+      const url = await uploadGroupLogo(
+        memberships[0].group_id,
+        file
+      );
+
+      const preview = document.getElementById("groupLogoPreview");
+      preview.src = url + "?v=" + Date.now();
+      preview.style.display = "block";
+
+      message.textContent = "Group logo uploaded successfully!";
+    } catch (error) {
+      message.textContent = "Upload failed: " + error.message;
+    }
+  });
   loadDashboard();
   loadMyDigs();
 </script>
