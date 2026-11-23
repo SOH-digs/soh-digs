@@ -242,7 +242,19 @@ async function loadDashboard() {
     const membership = memberships[0];
 
 currentGroupId = membership.group_id;
+const { data: groupData, error: groupError } = await db
+  .from("detecting_groups")
+  .select("logo_url")
+  .eq("id", currentGroupId)
+  .single();
 
+if (groupError) throw groupError;
+
+if (groupData?.logo_url) {
+  const logoPreview = document.getElementById("groupLogoPreview");
+  logoPreview.src = groupData.logo_url;
+  logoPreview.style.display = "block";
+}
     document.getElementById("accountEmail")
       .textContent = "Signed in as: " + user.email;
 
