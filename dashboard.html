@@ -252,7 +252,7 @@ if (groupError) throw groupError;
 
 if (groupData?.logo_url) {
   const logoPreview = document.getElementById("groupLogoPreview");
-  logoPreview.src = groupData.logo_url;
+  logoPreview.src = groupData.logo_url + "?v=" + Date.now();
   logoPreview.style.display = "block";
 }
     document.getElementById("accountEmail")
