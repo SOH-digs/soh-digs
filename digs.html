@@ -403,6 +403,27 @@ function renderList() {
 function showDetails(e) {
   const content=$("dialogContent");
   content.replaceChildren();
+  if (e.imagePath) {
+  const img = document.createElement("img");
+  img.alt = e.title;
+  img.style.width = "100%";
+  img.style.maxHeight = "300px";
+  img.style.objectFit = "contain";
+  img.style.borderRadius = "10px";
+  img.style.marginBottom = "15px";
+  img.style.display = "none";
+
+  db.storage.from("dig-images")
+    .createSignedUrl(e.imagePath, 3600)
+    .then(({ data, error }) => {
+      if (!error && data) {
+        img.src = data.signedUrl;
+        img.style.display = "block";
+      }
+    });
+
+  content.appendChild(img);
+}
   addText(content,"h2",e.title);
   addText(content,"p","Demonstration event — not bookable.");
   addText(content,"p","Date: "+formatDate(e.date));
