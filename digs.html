@@ -292,6 +292,7 @@ const { data, error } = await query
 
   events = (data || []).map(dig => ({
     id: dig.id,
+groupId: dig.group_id,
     title: dig.title,
     imagePath: dig.image_url || null,
     facebookUrl: dig.facebook_event_url || null,
@@ -409,7 +410,21 @@ if (e.groupLogo) {
   organiserRow.appendChild(logo);
 }
 
-addText(organiserRow,"span",e.organiser,"meta");
+const groupLink = document.createElement("a");
+groupLink.href = "group.html?id=" + encodeURIComponent(e.groupId);
+groupLink.style.color = "#145c45";
+groupLink.style.fontWeight = "bold";
+groupLink.style.textDecoration = "none";
+groupLink.style.display = "flex";
+groupLink.style.alignItems = "center";
+groupLink.style.gap = "10px";
+
+while (organiserRow.firstChild) {
+  groupLink.appendChild(organiserRow.firstChild);
+}
+
+groupLink.appendChild(document.createTextNode(e.organiser));
+organiserRow.appendChild(groupLink);
 body.appendChild(organiserRow);
     addText(body,"p","Example price: "+e.price);
     const button=document.createElement("button");
