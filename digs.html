@@ -267,13 +267,23 @@ const futureDate = (days) => {
 let events = [];
 
 async function loadDigs() {
-  const { data, error } = await db
-    .from("digs")
-    .select("*, detecting_groups(name)")
-    .eq("is_published", true)
-    .eq("is_private", false)
-    .eq("is_cancelled", false)
-    .order("start_date", { ascending: true });
+  const selectedGroup = new URLSearchParams(
+  window.location.search
+).get("group");
+
+let query = db
+  .from("digs")
+  .select("*, detecting_groups(name)")
+  .eq("is_published", true)
+  .eq("is_private", false)
+  .eq("is_cancelled", false);
+
+if (selectedGroup) {
+  query = query.eq("group_id", selectedGroup);
+}
+
+const { data, error } = await query
+  .order("start_date", { ascending: true });
 
   if (error) {
     console.error("Error loading digs:", error);
