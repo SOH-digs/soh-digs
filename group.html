@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group Profile | SOH Digs</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7f5;
+  color: #26352e;
+}
+
+header {
+  background: #145c45;
+  color: white;
+  padding: 25px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+}
+
+header p {
+  margin-bottom: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 30px auto;
+  padding: 15px;
+}
+
+.profile {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 15px #00000012;
+}
+
+#groupLogo {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  border-radius: 15px;
+  margin: 0 auto;
+  display: none;
+}
+
+#groupName {
+  color: #145c45;
+  margin-bottom: 10px;
+}
+
+.section {
+  background: white;
+  padding: 25px;
+  margin-top: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px #00000012;
+}
+
+.section h2 {
+  color: #145c45;
+  margin-top: 0;
+}
+
+.button {
+  display: block;
+  background: #145c45;
+  color: white;
+  padding: 14px;
+  margin-top: 12px;
+  border-radius: 8px;
+  text-align: center;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.button:hover {
+  background: #104b38;
+}
+
+footer {
+  text-align: center;
+  color: #66776d;
+  padding: 30px;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>SOH Digs</h1>
+  <p>Discover. Detect. Connect.</p>
+</header>
+
+<div class="container">
+
+  <a href="digs.html" class="button">
+    Back to Find a Dig
+  </a>
+
+  <br>
+
+  <div class="profile">
+    <img id="groupLogo" alt="Group logo">
+    <h1 id="groupName">Loading group...</h1>
+    <p id="groupCounty"></p>
+    <p id="message"></p>
+  </div>
+
+  <div class="section">
+    <h2>About the Group</h2>
+    <p id="groupDescription">
+      No group description available yet.
+    </p>
+  </div>
+
+  <div class="section">
+    <h2>Upcoming Digs</h2>
+    <p>Discover upcoming events organised by this group.</p>
+
+    <a id="groupDigs" class="button" hidden>
+      View Upcoming Digs
+    </a>
+  </div>
+
+  <div class="section">
+    <h2>Group Reviews</h2>
+    <p>Group ratings and reviews coming soon.</p>
+  </div>
+
+</div>
+
+<footer>
+  SOH Digs — Supporting Signals of Hope Detecting
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+async function loadGroup() {
+
+  const groupId = new URLSearchParams(
+    window.location.search
+  ).get("id");
+
+  if (!groupId) {
+    document.getElementById("groupName").textContent =
+      "Group not found";
+    return;
+  }
+
+  const { data, error } = await db
+    .from("detecting_groups")
+    .select("id, name, logo_url, home_county")
+    .eq("id", groupId)
+    .eq("is_approved", true)
+    .single();
+
+  if (error || !data) {
+    document.getElementById("groupName").textContent =
+      "Group unavailable";
+    return;
+  }
+
+  document.getElementById("groupName").textContent =
+    data.name;
+
+  document.getElementById("groupCounty").textContent =
+    data.home_county || "";
+
+  if (data.logo_url) {
+    const logo = document.getElementById("groupLogo");
+    logo.src = data.logo_url;
+    logo.style.display = "block";
+    logo.onerror = () => logo.style.display = "none";
+  }
+
+  const digsLink = document.getElementById("groupDigs");
+
+  digsLink.href =
+    "digs.html?group=" + encodeURIComponent(groupId);
+
+  digsLink.hidden = false;
+}
+
+loadGroup();
+
+</script>
+
+</body>
+</html>
