@@ -127,7 +127,23 @@ footer {
     </p>
   </div>
 
-  <div class="section">
+  <div class="section" id="groupLinks" style="display:none;">
+  <h2>Connect with the Group</h2>
+
+  <a id="groupWebsite" class="button"
+     target="_blank" rel="noopener noreferrer"
+     style="display:none;">
+    Visit Group Website
+  </a>
+
+  <a id="groupFacebook" class="button"
+     target="_blank" rel="noopener noreferrer"
+     style="display:none;">
+    Visit Facebook Page
+  </a>
+</div>
+
+<div class="section">
     <h2>Upcoming Digs</h2>
     <p>Discover upcoming events organised by this group.</p>
 
@@ -173,7 +189,7 @@ async function loadGroup() {
 
   const { data, error } = await db
     .from("detecting_groups")
-    .select("id, name, logo_url, home_county")
+    .select("id, name, logo_url, home_county, description, website_url, facebook_url, cover_image_url")
     .eq("id", groupId)
     .eq("is_approved", true)
     .single();
@@ -189,14 +205,36 @@ async function loadGroup() {
 
   document.getElementById("groupCounty").textContent =
     data.home_county || "";
-
+document.getElementById("groupDescription").textContent =
+  data.description || "No group description available yet.";
   if (data.logo_url) {
     const logo = document.getElementById("groupLogo");
     logo.src = data.logo_url;
     logo.style.display = "block";
     logo.onerror = () => logo.style.display = "none";
   }
+function showGroupLink(id, value) {
+  if (!value) return;
 
+  try {
+    const url = new URL(value);
+
+    if (url.protocol !== "https:" &&
+        url.protocol !== "http:") return;
+
+    const link = document.getElementById(id);
+    link.href = url.href;
+    link.style.display = "block";
+
+    document.getElementById("groupLinks").style.display =
+      "block";
+  } catch {
+    return;
+  }
+}
+
+showGroupLink("groupWebsite", data.website_url);
+showGroupLink("groupFacebook", data.facebook_url);
   const digsLink = document.getElementById("groupDigs");
 
   digsLink.href =
