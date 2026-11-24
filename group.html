@@ -114,6 +114,13 @@ footer {
   <br>
 
   <div class="profile">
+    <img id="groupCover" alt="Group cover image"
+     style="display:none;
+            width:100%;
+            height:250px;
+            object-fit:cover;
+            border-radius:12px;
+            margin-bottom:20px;">
     <img id="groupLogo" alt="Group logo">
     <h1 id="groupName">Loading group...</h1>
     <p id="groupCounty"></p>
@@ -207,6 +214,12 @@ async function loadGroup() {
     data.home_county || "";
 document.getElementById("groupDescription").textContent =
   data.description || "No group description available yet.";
+  if (data.cover_image_url) {
+  const cover = document.getElementById("groupCover");
+  cover.src = data.cover_image_url;
+  cover.style.display = "block";
+  cover.onerror = () => cover.style.display = "none";
+}
   if (data.logo_url) {
     const logo = document.getElementById("groupLogo");
     logo.src = data.logo_url;
