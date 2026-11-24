@@ -294,6 +294,8 @@ const { data, error } = await query
     id: dig.id,
     title: dig.title,
     imagePath: dig.image_url || null,
+    facebookUrl: dig.facebook_event_url || null,
+youtubeUrl: dig.youtube_url || null,
     county: dig.county || "",
     location: dig.town || "",
     date: dig.start_date.slice(0, 10),
@@ -431,6 +433,34 @@ function showDetails(e) {
   addText(content,"p","Organiser: "+e.organiser);
   addText(content,"p","Example price: "+e.price);
   addText(content,"p",e.description);
+  function addEventLink(url, label) {
+  if (!url) return;
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return;
+
+    const link = document.createElement("a");
+    link.href = parsed.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = label;
+    link.style.display = "block";
+    link.style.background = "#145c45";
+    link.style.color = "white";
+    link.style.padding = "12px";
+    link.style.marginTop = "10px";
+    link.style.borderRadius = "8px";
+    link.style.textAlign = "center";
+    link.style.textDecoration = "none";
+    content.appendChild(link);
+  } catch {
+    return;
+  }
+}
+
+addEventLink(e.facebookUrl, "View Facebook Event");
+addEventLink(e.youtubeUrl, "Watch YouTube Video");
   $("eventDialog").showModal();
 }
 
