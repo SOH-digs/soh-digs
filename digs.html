@@ -273,7 +273,7 @@ async function loadDigs() {
 
 let query = db
   .from("digs")
-  .select("*, detecting_groups(name)")
+  .select("*, detecting_groups(name, logo_url)")
   .eq("is_published", true)
   .eq("is_private", false)
   .eq("is_cancelled", false);
@@ -300,6 +300,7 @@ youtubeUrl: dig.youtube_url || null,
     location: dig.town || "",
     date: dig.start_date.slice(0, 10),
     organiser: dig.detecting_groups?.name || "Detecting Group",
+    groupLogo: dig.detecting_groups?.logo_url || null,
     price: dig.price_gbp == null ? "Contact organiser" : `£${dig.price_gbp}`,
     description: dig.description || ""
   }));
@@ -390,7 +391,26 @@ function renderList() {
     body.className="card-body";
     addText(body,"p","📅 "+formatDate(e.date),"meta");
     addText(body,"p","📍 "+e.location+", "+e.county,"meta");
-    addText(body,"p","👥 "+e.organiser,"meta");
+    const organiserRow = document.createElement("div");
+organiserRow.style.display = "flex";
+organiserRow.style.alignItems = "center";
+organiserRow.style.gap = "10px";
+organiserRow.style.margin = "12px 0";
+
+if (e.groupLogo) {
+  const logo = document.createElement("img");
+  logo.src = e.groupLogo;
+  logo.alt = e.organiser;
+  logo.style.width = "45px";
+  logo.style.height = "45px";
+  logo.style.objectFit = "contain";
+  logo.style.borderRadius = "8px";
+  logo.onerror = () => logo.remove();
+  organiserRow.appendChild(logo);
+}
+
+addText(organiserRow,"span",e.organiser,"meta");
+body.appendChild(organiserRow);
     addText(body,"p","Example price: "+e.price);
     const button=document.createElement("button");
     button.className="details";
