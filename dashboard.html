@@ -404,7 +404,31 @@ document.getElementById("addDigForm")
         is_private: false,
         is_cancelled: false
       };
+const imageFile = document.getElementById("digImage").files[0];
 
+if (imageFile) {
+  const extensions = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp"
+  };
+
+  const extension = extensions[imageFile.type];
+
+  if (!extension) {
+    throw new Error("Please select a JPG, PNG or WebP image.");
+  }
+
+  const imagePath = `${dig.group_id}/${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await db.storage
+    .from("dig-images")
+    .upload(imagePath, imageFile);
+
+  if (uploadError) throw uploadError;
+
+  dig.image_url = imagePath;
+}
       const { error } = await db.from("digs").insert(dig);
 
       if (error) throw error;
