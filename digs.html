@@ -293,6 +293,7 @@ const { data, error } = await query
   events = (data || []).map(dig => ({
     id: dig.id,
     title: dig.title,
+    imagePath: dig.image_url || null,
     county: dig.county || "",
     location: dig.town || "",
     date: dig.start_date.slice(0, 10),
@@ -360,6 +361,25 @@ function renderList() {
   filtered.forEach(e=>{
     const card=document.createElement("article");
     card.className="card";
+    if (e.imagePath) {
+  const img = document.createElement("img");
+  img.alt = e.title;
+  img.style.width = "100%";
+  img.style.height = "180px";
+  img.style.objectFit = "cover";
+  img.style.display = "none";
+
+  db.storage.from("dig-images")
+    .createSignedUrl(e.imagePath, 3600)
+    .then(({ data, error }) => {
+      if (!error && data) {
+        img.src = data.signedUrl;
+        img.style.display = "block";
+      }
+    });
+
+  card.appendChild(img);
+}
     const top=document.createElement("div");
     top.className="card-top";
     addText(top,"small","EXAMPLE EVENT");
