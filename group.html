@@ -413,15 +413,11 @@ async function setupReviewForm(db, groupId) {
     try {
 
       const { error } = await db
-        .from("group_reviews")
-        .upsert({
-          group_id: groupId,
-          user_id: user.id,
-          rating: stars,
-          review_text: text
-        }, {
-          onConflict: "group_id,user_id"
-        });
+  .rpc("save_group_review", {
+    p_group_id: groupId,
+    p_rating: stars,
+    p_review_text: text
+  });
 
       if (error) {
         message.textContent = "Unable to save review: " + error.message;
