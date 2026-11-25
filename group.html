@@ -161,7 +161,11 @@ footer {
 
   <div class="section">
     <h2>Group Reviews</h2>
-    <p>Group ratings and reviews coming soon.</p>
+    <div id="reviewSummary">
+  Loading group ratings...
+</div>
+
+<div id="reviewsList"></div>
   </div>
 
 </div>
@@ -254,8 +258,66 @@ showGroupLink("groupFacebook", data.facebook_url);
     "digs.html?group=" + encodeURIComponent(groupId);
 
   digsLink.hidden = false;
-}
 
+await loadReviews(db, groupId);
+}
+async function loadReviews(db, groupId) {
+  const summary = document.getElementById("reviewSummary");
+  const list = document.getElementById("reviewsList");
+
+  const { data, error } = await db
+    .from("group_reviews")
+    .select("rating, review_text, organiser_reply, created_at")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+
+  list.replaceChildren();
+
+  if (error) {
+    summary.textContent = "Unable to load reviews.";
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    summary.textContent = "No reviews yet. Be the first to leave a review!";
+    return;
+  }
+
+  const average = data.reduce(
+    (total, review) => total + review.rating, 0
+  ) / data.length;
+
+  summary.textContent =
+    "⭐ " + average.toFixed(1) + " out of 5 (" +
+    data.length + " reviews)";
+
+  data.forEach(review => {
+    const card = document.createElement("div");
+    card.style.borderTop = "1px solid #ddd";
+    card.style.padding = "15px 0";
+
+    const stars = document.createElement("strong");
+    stars.style.color = "#d4a017";
+    stars.textContent =
+      "★".repeat(review.rating) +
+      "☆".repeat(5 - review.rating);
+
+    const text = document.createElement("p");
+    text.textContent = review.review_text || "";
+
+    card.appendChild(stars);
+    card.appendChild(text);
+
+    if (review.organiser_reply) {
+      const reply = document.createElement("p");
+      reply.textContent =
+        "Organiser reply: " + review.organiser_reply;
+      card.appendChild(reply);
+    }
+
+    list.appendChild(card);
+  });
+}
 loadGroup();
 
 </script>
