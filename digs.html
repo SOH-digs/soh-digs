@@ -497,6 +497,7 @@ function showDetails(e) {
 addEventLink(e.facebookUrl, "View Facebook Event");
 addEventLink(e.youtubeUrl, "Watch YouTube Video");
   $("eventDialog").showModal();
+setupDigFavourite(content, e.id);
 }
 
 function renderCalendar() {
@@ -574,6 +575,98 @@ $("closeDialog").addEventListener("click",()=>$("eventDialog").close());
   console.log("SOH Digs: Find a Dig connected to Supabase");
   
    loadDigs(); 
+    async function setupDigFavourite(content, digId) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "details";
+  button.textContent = "♡ Add to Favourites";
+  button.style.marginTop = "12px";
+  button.style.width = "100%";
+  button.disabled = true;
+
+  const message = document.createElement("p");
+  message.setAttribute("role", "status");
+
+  content.appendChild(button);
+  content.appendChild(message);
+
+  try {
+    const { data: { user }, error: authError } =
+      await db.auth.getUser();
+
+    if (!user) {
+      button.textContent = "Login to Add to Favourites";
+      button.disabled = false;
+      button.onclick = () => {
+        window.location.href = "login.html";
+      };
+      return;
+    }
+
+    if (authError) throw authError;
+
+    const { data, error } = await db
+      .from("dig_favourites")
+      .select("dig_id")
+      .eq("user_id", user.id)
+      .eq("dig_id", digId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    let saved = !!data;
+
+    function updateButton() {
+      button.textContent = saved
+        ? "❤️ Remove from Favourites"
+        : "♡ Add to Favourites";
+    }
+
+    updateButton();
+    button.disabled = false;
+
+    button.onclick = async () => {
+      button.disabled = true;
+      message.textContent = "";
+
+      try {
+        const result = saved
+          ? await db.from("dig_favourites")
+              .delete()
+              .eq("user_id", user.id)
+              .eq("dig_id", digId)
+              .select("dig_id")
+          : await db.from("dig_favourites")
+              .insert({
+                user_id: user.id,
+                dig_id: digId
+              })
+              .select("dig_id");
+
+        if (result.error) throw result.error;
+
+        if (!result.data?.length) {
+          throw new Error("No favourite was changed.");
+        }
+
+        saved = !saved;
+        updateButton();
+
+        message.textContent = saved
+          ? "Dig added to favourites!"
+          : "Dig removed from favourites!";
+
+      } catch (error) {
+        message.textContent = error.message;
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+  } catch (error) {
+    message.textContent = error.message;
+  }
+}
 </script>
 </body>
 </html>
