@@ -279,7 +279,19 @@ accept="image/jpeg,image/png,image/webp"><br><br>
 </div>
 
     
-  </section>
+  <div id="manageReviewsSection" hidden>
+  <h2>Manage Group Reviews</h2>
+
+  <p>Read and respond to reviews left by members of your detecting group.</p>
+
+  <p id="manageReviewsMessage" role="status">
+    Your group reviews will appear here.
+  </p>
+
+  <div id="manageReviewsList"></div>
+</div>
+
+</section>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1064,8 +1076,120 @@ if (saveError) throw saveError;
 
   message.textContent = "Group details saved successfully!";
 });
+  async function loadGroupReviews() {
+  const message = document.getElementById("manageReviewsMessage");
+  const list = document.getElementById("manageReviewsList");
+
+  message.textContent = "Loading group reviews...";
+  list.replaceChildren();
+
+  try {
+    const { data: authData, error: authError } =
+      await db.auth.getUser();
+
+    if (authError || !authData.user) {
+      throw new Error("Please sign in again.");
+    }
+
+    const { data: memberships, error: membershipError } =
+      await db.from("group_organisers")
+        .select("group_id")
+        .eq("user_id", authData.user.id);
+
+    if (membershipError) throw membershipError;
+
+    const groupIds = memberships.map(item => item.group_id);
+
+    if (!groupIds.length) {
+      message.textContent = "No authorised groups found.";
+      return;
+    }
+
+    const { data: reviews, error } =
+      await db.from("group_reviews")
+        .select("id, group_id, rating, review_text, organiser_reply, created_at")
+        .in("group_id", groupIds)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    message.textContent = reviews.length
+      ? `${reviews.length} group reviews`
+      : "No reviews yet.";
+
+    reviews.forEach(review => {
+      const card = document.createElement("div");
+      card.style.padding = "15px";
+      card.style.marginBottom = "15px";
+      card.style.border = "1px solid #ddd";
+      card.style.borderRadius = "8px";
+
+      const stars = document.createElement("p");
+      stars.style.color = "#d4a017";
+      stars.style.fontSize = "22px";
+      stars.textContent =
+        "★".repeat(review.rating) +
+        "☆".repeat(5 - review.rating);
+
+      const text = document.createElement("p");
+      text.textContent = review.review_text || "";
+
+      const reply = document.createElement("textarea");
+      reply.placeholder = "Write your public reply...";
+      reply.value = review.organiser_reply || "";
+      reply.style.width = "100%";
+      reply.style.minHeight = "90px";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = review.organiser_reply
+        ? "Update Reply"
+        : "Publish Reply";
+
+      const feedback = document.createElement("p");
+      feedback.setAttribute("role", "status");
+
+      button.addEventListener("click", async () => {
+        if (!reply.value.trim()) {
+          feedback.textContent = "Please enter a reply.";
+          return;
+        }
+
+        button.disabled = true;
+        feedback.textContent = "Saving reply...";
+
+        try {
+          const { error: replyError } = await db.rpc(
+            "reply_to_group_review",
+            {
+              p_review_id: review.id,
+              p_reply: reply.value.trim()
+            }
+          );
+
+          if (replyError) throw replyError;
+
+          await loadGroupReviews();
+        } catch (error) {
+          feedback.textContent =
+            "Unable to save reply: " + error.message;
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      card.append(stars, text, reply, button, feedback);
+      list.appendChild(card);
+    });
+
+  } catch (error) {
+    message.textContent =
+      "Unable to load reviews: " + error.message;
+  }
+}
   loadDashboard();
   loadMyDigs();
+loadGroupReviews();
 </script>
 
 </body>
