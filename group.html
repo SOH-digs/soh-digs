@@ -166,6 +166,43 @@ footer {
 </div>
 
 <div id="reviewsList"></div>
+
+<hr style="margin:25px 0;">
+
+<p id="reviewLoginMessage">
+  Please sign in to leave a review.
+</p>
+
+<form id="reviewForm" style="display:none;">
+
+  <h3>Leave a Review</h3>
+
+  <label for="reviewRating">Your Rating</label>
+
+  <select id="reviewRating" required>
+    <option value="">Select your rating</option>
+    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+    <option value="4">⭐⭐⭐⭐ Very Good</option>
+    <option value="3">⭐⭐⭐ Good</option>
+    <option value="2">⭐⭐ Fair</option>
+    <option value="1">⭐ Poor</option>
+  </select>
+
+  <label for="reviewText">Your Review</label>
+
+  <textarea id="reviewText"
+    rows="5"
+    maxlength="2000"
+    placeholder="Tell us about your experience..."
+    required></textarea>
+
+  <button type="submit" class="button">
+    Submit Review
+  </button>
+
+  <p id="reviewMessage"></p>
+
+</form>
   </div>
 
 </div>
@@ -260,6 +297,7 @@ showGroupLink("groupFacebook", data.facebook_url);
   digsLink.hidden = false;
 
 await loadReviews(db, groupId);
+await setupReviewForm(db, groupId);
 }
 async function loadReviews(db, groupId) {
   const summary = document.getElementById("reviewSummary");
@@ -318,6 +356,94 @@ async function loadReviews(db, groupId) {
     list.appendChild(card);
   });
 }
+async function setupReviewForm(db, groupId) {
+
+  const form = document.getElementById("reviewForm");
+  const loginMessage = document.getElementById("reviewLoginMessage");
+  const rating = document.getElementById("reviewRating");
+  const reviewText = document.getElementById("reviewText");
+  const message = document.getElementById("reviewMessage");
+  const button = form.querySelector("button");
+
+  const { data: { user } } = await db.auth.getUser();
+
+  if (!user) {
+    form.style.display = "none";
+    loginMessage.style.display = "block";
+    return;
+  }
+
+  loginMessage.style.display = "none";
+
+  const { data: existing, error: readError } = await db
+    .from("group_reviews")
+    .select("rating, review_text")
+    .eq("group_id", groupId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (readError) {
+    loginMessage.textContent = "Unable to load your review.";
+    loginMessage.style.display = "block";
+    return;
+  }
+
+  form.style.display = "block";
+
+  if (existing) {
+    rating.value = existing.rating;
+    reviewText.value = existing.review_text || "";
+    button.textContent = "Update Review";
+  }
+
+  form.onsubmit = async function(event) {
+
+    event.preventDefault();
+
+    const stars = Number(rating.value);
+    const text = reviewText.value.trim();
+
+    if (!Number.isInteger(stars) || stars < 1 || stars > 5 || !text || text.length > 2000) {
+      message.textContent = "Please enter a valid rating and review.";
+      return;
+    }
+
+    button.disabled = true;
+    message.textContent = "Saving your review...";
+
+    try {
+
+      const { error } = await db
+        .from("group_reviews")
+        .upsert({
+          group_id: groupId,
+          user_id: user.id,
+          rating: stars,
+          review_text: text
+        }, {
+          onConflict: "group_id,user_id"
+        });
+
+      if (error) {
+        message.textContent = "Unable to save review: " + error.message;
+        return;
+      }
+
+      message.textContent = "Your review has been saved successfully!";
+      button.textContent = "Update Review";
+
+      await loadReviews(db, groupId);
+
+    } catch (error) {
+      message.textContent = "Something went wrong. Please try again.";
+    } finally {
+      button.disabled = false;
+    }
+
+  };
+
+}
+
 loadGroup();
 
 </script>
