@@ -355,7 +355,12 @@ function displayGroups() {
 
     addLink(links, "Website", safeUrl(group.website_url));
     addLink(links, "Facebook", safeUrl(group.facebook_url));
-
+addLink(
+  links,
+  "View Profile",
+  "group.html?id=" + encodeURIComponent(group.id),
+  false
+);
     addLink(
       links,
       "View Digs",
