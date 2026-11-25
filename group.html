@@ -196,7 +196,14 @@ textarea {
       View Upcoming Digs
     </a>
   </div>
-
+<div class="section">
+  <h2>Favourites</h2>
+  <button type="button" id="favouriteGroupButton"
+    class="button" style="display:none;">
+    ❤️ Add to Favourites
+  </button>
+  <p id="favouriteGroupMessage" role="status"></p>
+</div>
   <div class="section">
     <h2>Group Reviews</h2>
     <div id="reviewSummary">
@@ -339,6 +346,7 @@ showGroupLink("groupFacebook", data.facebook_url);
 
 await loadReviews(db, groupId);
 await setupReviewForm(db, groupId);
+await setupFavouriteGroup(db, groupId);
 }
 async function loadReviews(db, groupId) {
   const summary = document.getElementById("reviewSummary");
@@ -482,7 +490,83 @@ async function setupReviewForm(db, groupId) {
   };
 
 }
+async function setupFavouriteGroup(db, groupId) {
+  const button = document.getElementById("favouriteGroupButton");
+  const message = document.getElementById("favouriteGroupMessage");
 
+  const { data: authData, error: authError } =
+    await db.auth.getUser();
+
+  if (authError || !authData?.user) {
+    message.textContent = "Log in to save this group to your favourites.";
+    return;
+  }
+
+  const userId = authData.user.id;
+
+  const { data, error } = await db
+    .from("group_favourites")
+    .select("group_id")
+    .eq("user_id", userId)
+    .eq("group_id", groupId)
+    .maybeSingle();
+
+  if (error) {
+    message.textContent = "Unable to load favourites.";
+    return;
+  }
+
+  let isFavourite = !!data;
+
+  function updateButton() {
+    button.textContent = isFavourite
+      ? "❤️ Remove from Favourites"
+      : "🤍 Add to Favourites";
+  }
+
+  updateButton();
+  button.style.display = "block";
+
+  button.onclick = async () => {
+    button.disabled = true;
+
+    try {
+      if (isFavourite) {
+        const { error } = await db
+          .from("group_favourites")
+          .delete()
+          .eq("user_id", userId)
+          .eq("group_id", groupId)
+          .select("group_id")
+          .single();
+
+        if (error) throw error;
+
+        isFavourite = false;
+        message.textContent = "Group removed from favourites.";
+      } else {
+        const { error } = await db
+          .from("group_favourites")
+          .insert({
+            user_id: userId,
+            group_id: groupId
+          });
+
+        if (error) throw error;
+
+        isFavourite = true;
+        message.textContent = "Group added to favourites!";
+      }
+
+      updateButton();
+
+    } catch (error) {
+      message.textContent = "Unable to update favourites. Please try again.";
+    } finally {
+      button.disabled = false;
+    }
+  };
+}
 loadGroup();
 
 </script>
