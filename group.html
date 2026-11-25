@@ -374,6 +374,9 @@ async function loadReviews(db, groupId) {
 
     const stars = document.createElement("strong");
     stars.style.color = "#d4a017";
+stars.style.fontSize = "26px";
+stars.style.letterSpacing = "4px";
+stars.style.display = "block";
     stars.textContent =
       "★".repeat(review.rating) +
       "☆".repeat(5 - review.rating);
