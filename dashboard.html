@@ -1441,7 +1441,12 @@ loadGroupReviews();
 
       } else {
 
-        inactive.appendChild(card);
+        if (member.status === "removed" ||
+    member.status === "rejected") {
+    addAction("Reinstate Member", "approved");
+}
+
+inactive.appendChild(card);
 
       }
 
