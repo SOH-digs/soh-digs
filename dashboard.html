@@ -300,7 +300,74 @@ accept="image/jpeg,image/png,image/webp"><br><br>
   <button type="button" id="inviteMembersButton">
     Invite Members
   </button>
+<div id="invitationPanel" hidden
+     style="border:1px solid #ddd;
+     padding:20px;
+     margin:15px 0;
+     border-radius:10px;">
 
+  <h3>Invite New Members</h3>
+
+  <p>Select your detecting group and generate
+  an invitation to share with new members.</p>
+
+  <label for="invitationGroup">Detecting Group</label>
+
+  <select id="invitationGroup"></select>
+
+  <button type="button" id="generateInviteButton">
+    Generate Invitation
+  </button>
+
+  <div id="invitationResults" hidden>
+
+    <h4>Your Invitation Link</h4>
+
+    <input type="text"
+           id="invitationLink"
+           style="width:100%;"
+           readonly>
+
+    <button type="button" id="copyInviteButton">
+      Copy Invitation Link
+    </button>
+
+    <h4>Invite by Email</h4>
+
+    <input type="email"
+           id="inviteEmail"
+           placeholder="Enter email address">
+
+    <button type="button" id="emailInviteButton">
+      Invite via Email
+    </button>
+
+    <h4>Invitation QR Code</h4>
+
+    <div id="invitationQRCode"></div>
+
+    <button type="button" id="downloadQRButton">
+      Download QR Code
+    </button>
+
+    <button type="button" id="printQRButton">
+      Print QR Code
+    </button>
+
+    <p>Invitations are valid for 30 days.</p>
+
+    <p>All new members require group
+    administrator approval.</p>
+
+  </div>
+
+  <p id="invitationMessage" role="status"></p>
+
+  <button type="button" id="closeInvitationButton">
+    Close Invitations
+  </button>
+
+</div>
   <h3>Pending Membership Applications</h3>
   <div id="pendingMembersList"></div>
 
@@ -317,6 +384,7 @@ accept="image/jpeg,image/png,image/webp"><br><br>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
 const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
@@ -1381,6 +1449,385 @@ loadGroupReviews();
 }
 
 loadGroupMembers();
+  const invitePanel =
+  document.getElementById("invitationPanel");
+
+const inviteGroup =
+  document.getElementById("invitationGroup");
+
+const inviteMessage =
+  document.getElementById("invitationMessage");
+
+const inviteResults =
+  document.getElementById("invitationResults");
+
+const inviteLink =
+  document.getElementById("invitationLink");
+
+document.getElementById("inviteMembersButton")
+  .addEventListener("click", async () => {
+
+    invitePanel.hidden = false;
+    inviteResults.hidden = true;
+    inviteGroup.replaceChildren();
+
+    inviteMessage.textContent =
+      "Loading your detecting groups...";
+
+    try {
+
+      const { data: authData, error: authError } =
+        await db.auth.getUser();
+
+      if (authError || !authData.user) {
+        throw new Error("Please log in again.");
+      }
+
+      const { data: groups, error } =
+        await db.from("group_organisers")
+          .select("group_id, detecting_groups(name, is_approved)")
+          .eq("user_id", authData.user.id)
+          .eq("role", "owner");
+
+      if (error) throw error;
+
+      groups.forEach(item => {
+
+        if (!item.detecting_groups?.is_approved) {
+          return;
+        }
+
+        const option =
+          document.createElement("option");
+
+        option.value = item.group_id;
+
+        option.textContent =
+          item.detecting_groups.name;
+
+        inviteGroup.appendChild(option);
+
+      });
+
+      inviteMessage.textContent =
+        inviteGroup.options.length
+          ? "Select a group to generate an invitation."
+          : "No approved groups available.";
+
+    } catch (error) {
+
+      inviteMessage.textContent = error.message;
+
+    }
+
+  });
+
+document.getElementById("generateInviteButton")
+  .addEventListener("click", async () => {
+
+    const button =
+      document.getElementById("generateInviteButton");
+
+    if (!inviteGroup.value) {
+
+      inviteMessage.textContent =
+        "Please select a detecting group.";
+
+      return;
+    }
+
+    button.disabled = true;
+    inviteResults.hidden = true;
+
+    inviteMessage.textContent =
+      "Generating invitation...";
+
+    try {
+
+      const { data, error } = await db.rpc(
+        "create_group_invitation",
+        {
+          p_group_id: inviteGroup.value
+        }
+      );
+
+      if (error) throw error;
+
+      const url = new URL(
+        "join-group.html",
+        window.location.href
+      );
+
+      url.searchParams.set("code", data);
+
+      inviteLink.value = url.href;
+
+      inviteResults.hidden = false;
+
+      inviteMessage.textContent =
+        "Invitation successfully generated. Valid for 30 days.";
+
+    } catch (error) {
+
+      inviteMessage.textContent = error.message;
+
+    } finally {
+
+      button.disabled = false;
+
+    }
+
+  });
+
+document.getElementById("copyInviteButton")
+  .addEventListener("click", async () => {
+
+    try {
+
+      await navigator.clipboard.writeText(
+        inviteLink.value
+      );
+
+      inviteMessage.textContent =
+        "Invitation link copied!";
+
+    } catch (error) {
+
+      inviteLink.select();
+
+      inviteMessage.textContent =
+        "Press Ctrl + C to copy the invitation link.";
+
+    }
+
+  });
+
+document.getElementById("closeInvitationButton")
+  .addEventListener("click", () => {
+
+    invitePanel.hidden = true;
+
+  });
+  document.getElementById("emailInviteButton")
+  .addEventListener("click", () => {
+
+    const emailInput =
+      document.getElementById("inviteEmail");
+
+    const email = emailInput.value.trim();
+
+    if (!email || !emailInput.checkValidity()) {
+
+      inviteMessage.textContent =
+        "Please enter a valid email address.";
+
+      return;
+    }
+
+    if (!inviteLink.value) {
+
+      inviteMessage.textContent =
+        "Please generate an invitation first.";
+
+      return;
+    }
+
+    const subject =
+      "You're invited to join our detecting group!";
+
+    const body =
+      "Hello,\n\n" +
+      "You've been invited to join our detecting group on SOH Digs.\n\n" +
+      "Click the link below to register or log in and request membership:\n\n" +
+      inviteLink.value + "\n\n" +
+      "Your membership will require approval from the group administrator.\n\n" +
+      "This invitation is valid for 30 days.\n\n" +
+      "Happy detecting!\n\n" +
+      "SOH Digs\n" +
+      "Supporting Signals of Hope Detecting";
+
+    window.location.href =
+      "mailto:" + encodeURIComponent(email) +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(body);
+
+    inviteMessage.textContent =
+      "Invitation prepared in your email application.";
+
+  });
+  function generateInvitationQR() {
+
+  const qrContainer =
+    document.getElementById("invitationQRCode");
+
+  qrContainer.replaceChildren();
+
+  if (!inviteLink.value) {
+    return;
+  }
+
+  if (typeof QRCode === "undefined") {
+
+    inviteMessage.textContent =
+      "Unable to load the QR code library.";
+
+    return;
+  }
+
+  new QRCode(qrContainer, {
+    text: inviteLink.value,
+    width: 256,
+    height: 256,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  qrContainer.style.padding = "20px";
+  qrContainer.style.background = "#ffffff";
+  qrContainer.style.display = "inline-block";
+
+}
+
+const invitationObserver = new MutationObserver(() => {
+
+  if (!inviteResults.hidden) {
+    generateInvitationQR();
+  }
+
+});
+
+invitationObserver.observe(inviteResults, {
+  attributes: true,
+  attributeFilter: ["hidden"]
+});
+  document.getElementById("downloadQRButton")
+  .addEventListener("click", () => {
+
+    const canvas = document
+      .getElementById("invitationQRCode")
+      .querySelector("canvas");
+
+    if (!canvas || !inviteLink.value) {
+
+      inviteMessage.textContent =
+        "Please generate a QR code first.";
+
+      return;
+    }
+
+    const output = document.createElement("canvas");
+
+    output.width = canvas.width + 80;
+    output.height = canvas.height + 80;
+
+    const ctx = output.getContext("2d");
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, output.width, output.height);
+
+    ctx.drawImage(canvas, 40, 40);
+
+    const link = document.createElement("a");
+
+    link.download = "SOH-Digs-Group-Invitation.png";
+
+    link.href = output.toDataURL("image/png");
+
+    link.click();
+
+    inviteMessage.textContent =
+      "QR code download requested.";
+
+  });
+  document.getElementById("printQRButton")
+  .addEventListener("click", () => {
+
+    const canvas = document
+      .getElementById("invitationQRCode")
+      .querySelector("canvas");
+
+    if (!canvas || !inviteLink.value) {
+
+      inviteMessage.textContent =
+        "Please generate a QR code first.";
+
+      return;
+    }
+
+    const printWindow = window.open(
+      "", "_blank", "width=650,height=800"
+    );
+
+    if (!printWindow) {
+
+      inviteMessage.textContent =
+        "Please allow pop-ups to print the QR code.";
+
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>SOH Digs Group Invitation</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+          }
+          h1 {
+            color: #173e2b;
+          }
+          img {
+            width: 300px;
+            height: 300px;
+            padding: 30px;
+            background: white;
+          }
+          p {
+            font-size: 18px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>SOH Digs</h1>
+        <h2>Join Our Detecting Group</h2>
+
+        <p>Scan the QR code below using
+        your mobile phone.</p>
+
+        <img id="printQRImage"
+             alt="Group invitation QR code">
+
+        <p>Register or log in to request membership.</p>
+
+        <p>Group administrator approval is required.</p>
+
+        <p>Invitation valid for 30 days from creation.</p>
+
+        <hr>
+
+        <p>Supporting Signals of Hope Detecting</p>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    const image = printWindow.document
+      .getElementById("printQRImage");
+
+    image.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
+
+    image.src = canvas.toDataURL("image/png");
+
+  });
 </script>
 
 </body>
