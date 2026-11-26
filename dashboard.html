@@ -290,7 +290,29 @@ accept="image/jpeg,image/png,image/webp"><br><br>
 
   <div id="manageReviewsList"></div>
 </div>
+<div id="manageMembersSection" hidden>
 
+  <h2>Manage Group Members</h2>
+
+  <p>Invite new members and manage membership
+  applications for your detecting group.</p>
+
+  <button type="button" id="inviteMembersButton">
+    Invite Members
+  </button>
+
+  <h3>Pending Membership Applications</h3>
+  <div id="pendingMembersList"></div>
+
+  <h3>Approved Members</h3>
+  <div id="approvedMembersList"></div>
+
+  <h3>Rejected and Removed Members</h3>
+  <div id="inactiveMembersList"></div>
+
+  <p id="manageMembersMessage" role="status"></p>
+
+</div>
 </section>
 </main>
 
@@ -1190,6 +1212,175 @@ if (saveError) throw saveError;
   loadDashboard();
   loadMyDigs();
 loadGroupReviews();
+  async function loadGroupMembers() {
+
+  const section =
+    document.getElementById("manageMembersSection");
+
+  const message =
+    document.getElementById("manageMembersMessage");
+
+  const pending =
+    document.getElementById("pendingMembersList");
+
+  const approved =
+    document.getElementById("approvedMembersList");
+
+  const inactive =
+    document.getElementById("inactiveMembersList");
+
+  pending.replaceChildren();
+  approved.replaceChildren();
+  inactive.replaceChildren();
+
+  try {
+
+    const { data: authData, error: authError } =
+      await db.auth.getUser();
+
+    if (authError || !authData.user) {
+      section.hidden = true;
+      return;
+    }
+
+    const { data: groups, error: groupError } =
+      await db.from("group_organisers")
+        .select("group_id")
+        .eq("user_id", authData.user.id)
+        .eq("role", "owner");
+
+    if (groupError) throw groupError;
+
+    const groupIds =
+      groups.map(item => item.group_id);
+
+    if (!groupIds.length) {
+      section.hidden = true;
+      return;
+    }
+
+    section.hidden = false;
+
+    message.textContent = "Loading members...";
+
+    const { data: members, error } =
+      await db.from("group_memberships")
+        .select("id, group_id, user_id, status, created_at")
+        .in("group_id", groupIds)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    members.forEach(member => {
+
+      const card = document.createElement("div");
+
+      card.style.padding = "15px";
+      card.style.marginBottom = "10px";
+      card.style.border = "1px solid #ddd";
+      card.style.borderRadius = "8px";
+
+      const name = document.createElement("p");
+      name.textContent = "Member ID: " + member.user_id;
+
+      const group = document.createElement("p");
+      group.textContent = "Group ID: " + member.group_id;
+
+      const status = document.createElement("p");
+      status.textContent = "Status: " + member.status;
+
+      const date = document.createElement("p");
+      date.textContent = "Applied: " +
+        new Date(member.created_at)
+          .toLocaleDateString("en-GB");
+
+      card.append(name, group, status, date);
+
+      function addAction(label, newStatus) {
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.textContent = label;
+        button.style.marginRight = "10px";
+
+        button.onclick = async () => {
+
+          if (!confirm(label + " this member?")) {
+            return;
+          }
+
+          button.disabled = true;
+
+          try {
+
+            const { error } = await db.rpc(
+              "review_group_membership",
+              {
+                p_membership_id: member.id,
+                p_status: newStatus
+              }
+            );
+
+            if (error) throw error;
+
+            await loadGroupMembers();
+
+          } catch (error) {
+
+            message.textContent = error.message;
+            button.disabled = false;
+
+          }
+        };
+
+        card.appendChild(button);
+      }
+
+      if (member.status === "pending") {
+
+        addAction("Approve", "approved");
+        addAction("Reject", "rejected");
+        pending.appendChild(card);
+
+      } else if (member.status === "approved") {
+
+        addAction("Remove", "removed");
+        approved.appendChild(card);
+
+      } else {
+
+        inactive.appendChild(card);
+
+      }
+
+    });
+
+    if (!pending.children.length) {
+      pending.textContent = "No pending applications.";
+    }
+
+    if (!approved.children.length) {
+      approved.textContent = "No approved members yet.";
+    }
+
+    if (!inactive.children.length) {
+      inactive.textContent = "No rejected or removed members.";
+    }
+
+    message.textContent =
+      members.length + " membership records found.";
+
+  } catch (error) {
+
+    message.textContent =
+      "Unable to load members: " + error.message;
+
+  }
+
+}
+
+loadGroupMembers();
 </script>
 
 </body>
