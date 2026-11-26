@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Join a Group | SOH Digs</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f5f1;
+  color: #24372c;
+}
+
+header {
+  background: #173e2b;
+  color: white;
+  padding: 25px;
+  text-align: center;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+main {
+  max-width: 650px;
+  margin: 40px auto;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 3px 12px #00000015;
+}
+
+h2 {
+  color: #245c3b;
+}
+
+.button {
+  display: block;
+  width: 100%;
+  background: #287a45;
+  color: white;
+  padding: 14px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 7px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background: #52675a;
+}
+
+#message {
+  padding: 15px;
+  line-height: 1.6;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #666;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+  <h1>SOH Digs</h1>
+  <p>Discover Metal Detecting Events Across the UK</p>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="digs.html">Find Digs</a>
+    <a href="groups.html">Detecting Groups</a>
+  </nav>
+
+</header>
+
+<main>
+
+  <div class="card">
+
+    <h2>You've Been Invited!</h2>
+
+    <p>
+      You have received an invitation to join
+      a detecting group on SOH Digs.
+    </p>
+
+    <p>
+      Once your membership has been approved
+      by the group administrator, you will
+      be able to access the group's private digs.
+    </p>
+
+    <div id="message" role="status">
+      Checking your invitation...
+    </div>
+
+    <div id="guestSection" hidden>
+
+      <a class="button" id="loginLink"
+         href="login.html">
+        Log In
+      </a>
+
+      <a class="button secondary"
+         id="registerLink"
+         href="register.html">
+        Create an Account
+      </a>
+
+    </div>
+
+    <button class="button"
+            id="acceptButton"
+            type="button"
+            hidden>
+      Request Group Membership
+    </button>
+
+    <a class="button secondary"
+       href="index.html">
+      Return to Homepage
+    </a>
+
+  </div>
+
+</main>
+
+<footer>
+  SOH Digs | Supporting Signals of Hope Detecting
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+const message =
+  document.getElementById("message");
+
+const acceptButton =
+  document.getElementById("acceptButton");
+
+const guestSection =
+  document.getElementById("guestSection");
+
+const params =
+  new URLSearchParams(window.location.search);
+
+const inviteCode = params.get("code");
+
+async function initialise() {
+
+  if (!inviteCode ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(inviteCode)) {
+
+    message.textContent =
+      "This invitation link is invalid.";
+
+    return;
+  }
+
+  const { data, error } =
+    await db.auth.getUser();
+
+  if (error || !data?.user) {
+
+    message.textContent =
+      "Please log in or create an account before applying.";
+
+    const returnPage =
+      "join-group.html?code=" +
+      encodeURIComponent(inviteCode);
+
+    document.getElementById("loginLink").href =
+      "login.html?returnTo=" +
+      encodeURIComponent(returnPage);
+
+    document.getElementById("registerLink").href =
+      "register.html?returnTo=" +
+      encodeURIComponent(returnPage);
+
+    guestSection.hidden = false;
+
+    return;
+  }
+
+  message.textContent =
+    "You are logged in. Click below to submit your membership application.";
+
+  acceptButton.hidden = false;
+
+}
+
+acceptButton.addEventListener("click", async () => {
+
+  acceptButton.disabled = true;
+
+  message.textContent =
+    "Submitting your membership application...";
+
+  try {
+
+    const { data, error } = await db.rpc(
+      "accept_group_invitation",
+      {
+        p_invite_code: inviteCode
+      }
+    );
+
+    if (error) throw error;
+
+    acceptButton.hidden = true;
+
+    if (data === "pending") {
+
+      message.textContent =
+        "Your membership application is awaiting approval from the group administrator.";
+
+    } else if (data === "approved") {
+
+      message.textContent =
+        "You are already an approved member of this group.";
+
+    } else if (data === "rejected") {
+
+      message.textContent =
+        "Your membership application has previously been rejected. Please contact the group administrator.";
+
+    } else if (data === "removed") {
+
+      message.textContent =
+        "Your membership has been removed. Please contact the group administrator.";
+
+    } else {
+
+      message.textContent =
+        "Please contact the group administrator to confirm your membership status.";
+
+    }
+
+  } catch (error) {
+
+    message.textContent = error.message;
+
+    acceptButton.disabled = false;
+
+  }
+
+});
+
+initialise();
+
+</script>
+
+</body>
+</html>
