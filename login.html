@@ -121,7 +121,20 @@
           });
 
         if (error) throw error;
+const returnTo = new URLSearchParams(
+  window.location.search
+).get("returnTo");
 
+if (returnTo &&
+    /^join-group\.html\?code=[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(returnTo)) {
+
+  message.textContent = "Login successful!";
+
+  window.location.replace(returnTo);
+
+  return;
+
+}
         const { data: membership, error: memberError } =
           await db.from("group_organisers")
             .select("group_id, role")
