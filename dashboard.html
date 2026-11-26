@@ -248,7 +248,13 @@ accept="image/jpeg,image/png,image/webp"><br><br>
 
     <label for="digYouTube">YouTube Link (optional)</label><br>
     <input type="url" id="digYouTube"><br><br>
+<label for="digVisibility">Dig Visibility</label><br>
 
+<select id="digVisibility" required>
+  <option value="">Select visibility</option>
+  <option value="public">Public Dig - Everyone</option>
+  <option value="private">Private Dig - Approved Members Only</option>
+</select><br><br>
     <button type="submit" id="publishDigButton">
   Publish Dig
 </button>
@@ -536,7 +542,7 @@ document.getElementById("addDigForm")
         youtube_url:
           document.getElementById("digYouTube").value.trim() || null,
         is_published: true,
-        is_private: false,
+        is_private: document.getElementById("digVisibility").value !== "public",
         is_cancelled: false
       };
 const imageFile = document.getElementById("digImage").files[0];
@@ -611,7 +617,7 @@ async function loadMyDigs() {
     const { data: digs, error: digsError } =
       await db.from("digs")
        
-.select("id, title, start_date, end_date, town, county, price_gbp, is_published, is_cancelled")
+.select("id, title, start_date, end_date, town, county, price_gbp, is_published, is_cancelled, is_private")
 
         .in("group_id", groupIds)
         .order("start_date", { ascending: true });
@@ -689,7 +695,23 @@ const fields = [
   ["Price (£)", "price_gbp", "number", dig.price_gbp]
 ];
 
+const visibilityLabel = document.createElement("label");
+visibilityLabel.textContent = "Dig Visibility";
 
+const visibility = document.createElement("select");
+visibility.name = "is_private";
+visibility.style.display = "block";
+visibility.style.marginBottom = "15px";
+
+visibility.innerHTML = `
+  <option value="false">Public Dig - Everyone</option>
+  <option value="true">Private Dig - Approved Members Only</option>
+`;
+
+visibility.value = String(dig.is_private === true);
+
+form.appendChild(visibilityLabel);
+form.appendChild(visibility);
   fields.forEach(([labelText, name, type, value]) => {
     const label = document.createElement("label");
     label.textContent = labelText;
@@ -755,7 +777,8 @@ form.addEventListener("submit", async (event) => {
       end_date: new Date(end).toISOString(),
       town: String(values.get("town")).trim(),
       county: String(values.get("county")).trim(),
-      price_gbp: price
+      price_gbp: price,
+is_private: values.get("is_private") === "true"
     };
 
     if (!updates.title || !updates.town || !updates.county) {
