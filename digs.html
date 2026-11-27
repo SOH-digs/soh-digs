@@ -179,6 +179,19 @@ footer a { color:#f1cc7c; }
   .event-label { font-size:9px; }
   nav a { margin:0 12px 0 0; }
 }
+  #eventDialog h2,
+#eventDialog h3 {
+  color: color-mix(in srgb, var(--group-primary, #164e43) 55%, black);
+}
+
+#eventDialog button {
+  background: color-mix(in srgb, var(--group-primary, #164e43) 55%, black);
+  color: white;
+}
+
+#eventDialog button:hover {
+  background: color-mix(in srgb, var(--group-primary, #164e43) 40%, black);
+}
 </style>
 </head>
 <body>
@@ -467,6 +480,19 @@ body.appendChild(organiserRow);
 function showDetails(e) {
   const content=$("dialogContent");
   content.replaceChildren();
+  const primaryColour = /^#[0-9a-fA-F]{6}$/.test(e.primaryColour)
+  ? e.primaryColour : "#164e43";
+
+const secondaryColour = /^#[0-9a-fA-F]{6}$/.test(e.secondaryColour)
+  ? e.secondaryColour : "#8ba88e";
+
+const dialog = $("eventDialog");
+
+dialog.style.setProperty("--group-primary", primaryColour);
+dialog.style.setProperty("--group-secondary", secondaryColour);
+
+dialog.style.borderTop = "6px solid " + primaryColour;
+dialog.style.borderBottom = "4px solid " + secondaryColour;
   if (e.imagePath) {
   const img = document.createElement("img");
   img.alt = e.title;
