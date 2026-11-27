@@ -213,7 +213,64 @@
     SUPABASE_KEY
   );
 
-  console.log("SOH Digs: Supabase connected");
+  
+async function updateAccountMenu() {
+  const { data, error } = await db.auth.getUser();
+
+  if (error || !data.user) return;
+
+  const user = data.user;
+
+  document.getElementById("accountStatus").style.display = "block";
+  document.getElementById("accountLabel").textContent = "My Account";
+
+  const { data: organiser } = await db
+    .from("group_organisers")
+    .select("role")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  document.getElementById("accountDropdown").innerHTML = `
+    <div style="color:#4ade80; margin-bottom:12px;">
+      ● Logged in
+    </div>
+
+    <div id="accountEmail" style="color:white; font-size:12px; margin-bottom:15px; overflow-wrap:anywhere;"></div>
+
+    <a href="favourites.html" style="display:block; margin-bottom:12px;">
+      ❤️ My Favourites
+    </a>
+
+    ${organiser ? `
+      <a href="dashboard.html" style="display:block; margin-bottom:12px;">
+        Organiser Dashboard
+      </a>
+    ` : ""}
+
+    <hr style="opacity:0.3;">
+
+    <button id="logoutButton" style="background:#b91c1c; color:white; border:0; padding:10px; border-radius:6px; width:100%; cursor:pointer;">
+      Log Out
+    </button>
+  `;
+
+  document.getElementById("accountEmail").textContent = user.email;
+
+  document.getElementById("logoutButton").onclick = async function() {
+    const { error } = await db.auth.signOut();
+
+    if (error) {
+      alert("Unable to log out. Please try again.");
+      return;
+    }
+
+    window.location.href = "index.html";
+  };
+}
+
+updateAccountMenu();
+
 </script>
 </body>
 </html>
