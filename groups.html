@@ -246,7 +246,7 @@ async function loadGroups() {
 
   const { data, error } = await db
     .from("detecting_groups")
-    .select("id, name, description, home_county, website_url, facebook_url, logo_url")
+    .select("id, name, description, home_county, website_url, facebook_url, logo_url, primary_colour, secondary_colour")
     .eq("is_approved", true)
     .order("name");
 
@@ -321,7 +321,14 @@ function displayGroups() {
 
     const card = document.createElement("article");
     card.className = "group-card";
+const primaryColour = /^#[0-9a-fA-F]{6}$/.test(group.primary_colour)
+  ? group.primary_colour : "#164e43";
 
+const secondaryColour = /^#[0-9a-fA-F]{6}$/.test(group.secondary_colour)
+  ? group.secondary_colour : "#8ba88e";
+
+card.style.borderTop = "6px solid " + primaryColour;
+card.style.borderBottom = "4px solid " + secondaryColour;
     const logoUrl = safeUrl(group.logo_url);
 
     if (logoUrl) {
