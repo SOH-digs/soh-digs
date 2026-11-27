@@ -6,6 +6,10 @@
 <title>Group Profile | SOH Digs</title>
 
 <style>
+  :root {
+  --group-primary: #164e43;
+  --group-secondary: #8ba88e;
+}
 * {
   box-sizing: border-box;
 }
@@ -44,6 +48,8 @@ header p {
   border-radius: 15px;
   text-align: center;
   box-shadow: 0 4px 15px #00000012;
+  border-top: 8px solid var(--group-primary);
+  border-bottom: 5px solid var(--group-secondary);
 }
 
 #groupLogo {
@@ -285,7 +291,7 @@ async function loadGroup() {
 
   const { data, error } = await db
     .from("detecting_groups")
-    .select("id, name, logo_url, home_county, description, website_url, facebook_url, cover_image_url")
+    .select("id, name, logo_url, home_county, description, website_url, facebook_url, cover_image_url, primary_colour, secondary_colour")
     .eq("id", groupId)
     .eq("is_approved", true)
     .single();
@@ -295,7 +301,14 @@ async function loadGroup() {
       "Group unavailable";
     return;
   }
+const primaryColour = /^#[0-9a-fA-F]{6}$/.test(data.primary_colour)
+  ? data.primary_colour : "#164e43";
 
+const secondaryColour = /^#[0-9a-fA-F]{6}$/.test(data.secondary_colour)
+  ? data.secondary_colour : "#8ba88e";
+
+document.documentElement.style.setProperty("--group-primary", primaryColour);
+document.documentElement.style.setProperty("--group-secondary", secondaryColour);
   document.getElementById("groupName").textContent =
     data.name;
 
