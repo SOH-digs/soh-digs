@@ -88,7 +88,9 @@ button { cursor:pointer; }
   box-shadow:0 4px 16px #00000012;
 }
 .card-top {
-  background:linear-gradient(120deg,#285b4b,#92a98c);
+  background: linear-gradient(120deg,
+  color-mix(in srgb, var(--group-primary, #164e43) 55%, black),
+  color-mix(in srgb, var(--group-secondary, #8ba88e) 55%, black));
   color:white;
   padding:25px;
 }
@@ -101,7 +103,7 @@ button { cursor:pointer; }
 .card h2 { font-size:21px; }
 .meta { line-height:1.9; color:#52625c; }
 .details {
-  background:var(--green);
+  background: color-mix(in srgb, var(--group-primary, #164e43) 55%, black);
   color:white;
   border:0;
   width:100%;
@@ -273,7 +275,7 @@ async function loadDigs() {
 
 let query = db
   .from("digs")
-  .select("*, detecting_groups(name, logo_url)")
+  .select("*, detecting_groups(name, logo_url, primary_colour, secondary_colour)")
   .eq("is_published", true)
   .eq("is_cancelled", false);
 
@@ -302,6 +304,8 @@ youtubeUrl: dig.youtube_url || null,
     date: dig.start_date.slice(0, 10),
     organiser: dig.detecting_groups?.name || "Detecting Group",
     groupLogo: dig.detecting_groups?.logo_url || null,
+    primaryColour: dig.detecting_groups?.primary_colour || "#164e43",
+secondaryColour: dig.detecting_groups?.secondary_colour || "#8ba88e",
     price: dig.price_gbp == null ? "Contact organiser" : `£${dig.price_gbp}`,
     description: dig.description || ""
   }));
@@ -365,6 +369,17 @@ function renderList() {
   filtered.forEach(e=>{
     const card=document.createElement("article");
     card.className="card";
+    const primaryColour = /^#[0-9a-fA-F]{6}$/.test(e.primaryColour)
+  ? e.primaryColour : "#164e43";
+
+const secondaryColour = /^#[0-9a-fA-F]{6}$/.test(e.secondaryColour)
+  ? e.secondaryColour : "#8ba88e";
+
+card.style.setProperty("--group-primary", primaryColour);
+card.style.setProperty("--group-secondary", secondaryColour);
+
+card.style.borderTop = "6px solid " + primaryColour;
+card.style.borderBottom = "4px solid " + secondaryColour;
     if (e.imagePath) {
   const img = document.createElement("img");
   img.alt = e.title;
