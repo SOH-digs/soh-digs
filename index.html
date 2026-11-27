@@ -132,19 +132,39 @@
       <a href="favourites.html">❤️ My Favourites</a>
       <a href="#about">About</a>
       
-<details style="display:inline-block; margin-left:15px; position:relative; vertical-align:middle;">
-  <summary style="cursor:pointer; color:white; font-weight:bold;">
-    Login ▾
+
+<details id="accountMenu" style="display:inline-block; position:absolute; top:12px; right:15px; z-index:1000;">
+
+  <summary style="cursor:pointer; color:white; list-style:none; text-align:center;">
+
+    <span style="position:relative; display:inline-block;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7">
+        <circle cx="12" cy="12" r="11"/>
+        <circle cx="12" cy="8" r="3"/>
+        <path d="M5 19c0-8 14-8 14 0"/>
+      </svg>
+
+      <span id="accountStatus" style="display:none; position:absolute; bottom:2px; right:0; width:10px; height:10px; background:#4ade80; border:2px solid #193b2b; border-radius:50%;"></span>
+    </span>
+
+    <div id="accountLabel" style="font-size:11px;">
+      Sign In
+    </div>
+
   </summary>
-  <div style="position:absolute; top:100%; right:0; z-index:1000; background:#193b2b; padding:12px; border-radius:8px; min-width:180px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-    <a href="login.html" style="display:block; margin-bottom:10px;">
-      Organiser Login
-    </a>
-    <a href="login.html" style="display:block;">
-  Member Login
-</a>
+
+  <div id="accountDropdown" style="position:absolute; top:100%; right:0; background:#193b2b; padding:15px; border-radius:8px; min-width:200px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+
+    <a href="login.html" style="display:block; margin-bottom:12px;">Member Login</a>
+
+    <a href="login.html" style="display:block; margin-bottom:12px;">Organiser Login</a>
+
+    <a href="member-register.html" style="display:block;">Create a Free Account</a>
+
   </div>
+
 </details>
+
 
     </nav>
   </header>
