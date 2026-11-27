@@ -291,6 +291,7 @@ const { data, error } = await query
 
   events = (data || []).map(dig => ({
     id: dig.id,
+isPrivate: dig.is_private === true,
 groupId: dig.group_id,
     title: dig.title,
     imagePath: dig.image_url || null,
@@ -387,6 +388,18 @@ function renderList() {
     top.className="card-top";
     addText(top,"small","EXAMPLE EVENT");
     addText(top,"h2",e.title);
+
+if (e.isPrivate) {
+    const privateLabel = document.createElement("div");
+    privateLabel.textContent = "🔒 Private – Members Only";
+    privateLabel.style.background = "#fff3cd";
+    privateLabel.style.color = "#664d03";
+    privateLabel.style.padding = "6px 10px";
+    privateLabel.style.borderRadius = "6px";
+    privateLabel.style.fontWeight = "bold";
+    privateLabel.style.marginTop = "8px";
+    top.appendChild(privateLabel);
+}
     const body=document.createElement("div");
     body.className="card-body";
     addText(body,"p","📅 "+formatDate(e.date),"meta");
