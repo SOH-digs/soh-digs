@@ -144,6 +144,14 @@ footer {
 #status {
   margin-bottom: 20px;
 }
+  .group-card a {
+  background: color-mix(in srgb, var(--group-primary) 55%, black);
+  color: white;
+}
+
+.group-card a:hover {
+  background: color-mix(in srgb, var(--group-primary) 40%, black);
+}
 </style>
 </head>
 
@@ -329,6 +337,7 @@ const secondaryColour = /^#[0-9a-fA-F]{6}$/.test(group.secondary_colour)
 
 card.style.borderTop = "6px solid " + primaryColour;
 card.style.borderBottom = "4px solid " + secondaryColour;
+    card.style.setProperty("--group-primary", primaryColour);
     const logoUrl = safeUrl(group.logo_url);
 
     if (logoUrl) {
