@@ -157,16 +157,49 @@ footer {
 
 <body>
 
-<header>
+<header style="position:relative; padding-left:85px; padding-right:85px;">
   <h1>SOH Digs</h1>
   <p>Discover Detecting Groups Across the UK</p>
+  
+<details id="accountMenu" style="position:absolute; top:12px; right:15px; z-index:1000;">
+
+  <summary style="cursor:pointer; color:white; list-style:none; text-align:center;">
+
+    <span style="position:relative; display:inline-block;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.7">
+        <circle cx="12" cy="12" r="11"/>
+        <circle cx="12" cy="8" r="3"/>
+        <path d="M5 19c0-8 14-8 14 0"/>
+      </svg>
+
+      <span id="accountStatus" style="display:none; position:absolute; bottom:2px; right:0; width:10px; height:10px; background:#4ade80; border:2px solid #193b2b; border-radius:50%;"></span>
+    </span>
+
+    <div id="accountLabel" style="font-size:11px;">
+      Sign In
+    </div>
+
+  </summary>
+
+  <div id="accountDropdown" style="position:absolute; top:100%; right:0; background:#193b2b; color:white; padding:15px; border-radius:8px; min-width:200px; box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+
+    <a href="login.html" style="display:block; color:white; margin-bottom:12px;">Member Login</a>
+
+    <a href="login.html" style="display:block; color:white; margin-bottom:12px;">Organiser Login</a>
+
+    <a href="member-register.html" style="display:block; color:white;">Create a Free Account</a>
+
+  </div>
+
+</details>
+
 </header>
 
 <nav>
   <a href="index.html">Home</a>
   <a href="digs.html">Find a Dig</a>
   <a href="groups.html">Detecting Groups</a>
-  <a href="login.html">Organiser Login</a>
+  
 </nav>
 
 <main>
@@ -219,6 +252,64 @@ const db = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
+
+async function updateAccountMenu() {
+  const { data, error } = await db.auth.getUser();
+
+  if (error || !data.user) return;
+
+  const user = data.user;
+
+  document.getElementById("accountStatus").style.display = "block";
+  document.getElementById("accountLabel").textContent = "My Account";
+
+  const { data: organiser } = await db
+    .from("group_organisers")
+    .select("role")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  document.getElementById("accountDropdown").innerHTML = `
+    <div style="color:#4ade80; margin-bottom:12px;">
+      ● Logged in
+    </div>
+
+    <div id="accountEmail" style="color:white; font-size:12px; margin-bottom:15px; overflow-wrap:anywhere;"></div>
+
+    <a href="favourites.html" style="display:block; color:white; margin-bottom:12px;">
+      ❤️ My Favourites
+    </a>
+
+    ${organiser ? `
+      <a href="dashboard.html" style="display:block; color:white; margin-bottom:12px;">
+        Organiser Dashboard
+      </a>
+    ` : ""}
+
+    <hr style="opacity:0.3;">
+
+    <button id="logoutButton" style="background:#b91c1c; color:white; border:0; padding:10px; border-radius:6px; width:100%; cursor:pointer;">
+      Log Out
+    </button>
+  `;
+
+  document.getElementById("accountEmail").textContent = user.email;
+
+  document.getElementById("logoutButton").onclick = async function() {
+    const { error } = await db.auth.signOut();
+
+    if (error) {
+      alert("Unable to log out. Please try again.");
+      return;
+    }
+
+    window.location.href = "index.html";
+  };
+}
+
+updateAccountMenu();
+
 
 let allGroups = [];
 
