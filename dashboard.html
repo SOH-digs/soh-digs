@@ -410,8 +410,17 @@ accept="image/jpeg,image/png,image/webp"><br><br>
   <h3>Pending Membership Applications</h3>
   <div id="pendingMembersList"></div>
 
-  <h3>Approved Members</h3>
-  <div id="approvedMembersList"></div>
+  <h3>Approved Members (<span id="approvedMemberCount">0</span>)</h3>
+
+<input type="search"
+       id="approvedMemberSearch"
+       aria-label="Search members by name"
+       placeholder="Search members by name..."
+       style="width:100%; max-width:350px; padding:10px; margin-bottom:12px; border:1px solid #ccc; border-radius:6px;">
+
+<div id="approvedMembersList"></div>
+
+<div id="approvedMembersPagination" style="margin-top:10px;"></div>
 
   <h3>Rejected and Removed Members</h3>
   <div id="inactiveMembersList"></div>
@@ -1566,7 +1575,8 @@ group.textContent = "Group: " +
       } else if (member.status === "approved") {
 
         addAction("Remove", "removed");
-        approved.appendChild(card);
+        card.dataset.memberName = fullName.toLowerCase();
+approved.appendChild(card);
 
       } else {
 
@@ -1584,7 +1594,94 @@ inactive.appendChild(card);
     if (!pending.children.length) {
       pending.textContent = "No pending applications.";
     }
+const sortedMembers = Array.from(approved.children)
+    .sort((a, b) =>
+        a.dataset.memberName.localeCompare(
+            b.dataset.memberName
+        )
+    );
 
+const memberSearch = document.createElement("input");
+memberSearch.type = "search";
+memberSearch.placeholder = "Search approved members...";
+memberSearch.setAttribute("aria-label", "Search approved members");
+memberSearch.style.width = "100%";
+memberSearch.style.padding = "10px";
+memberSearch.style.marginBottom = "15px";
+
+const memberCount = document.createElement("p");
+
+const previousButton = document.createElement("button");
+previousButton.type = "button";
+previousButton.textContent = "Previous";
+
+const nextButton = document.createElement("button");
+nextButton.type = "button";
+nextButton.textContent = "Next";
+
+const pageInfo = document.createElement("span");
+pageInfo.style.margin = "0 15px";
+
+let currentPage = 1;
+const pageSize = 25;
+
+function displayApprovedMembers() {
+    const search = memberSearch.value.toLowerCase().trim();
+
+    const filtered = sortedMembers.filter(card =>
+        card.dataset.memberName.includes(search)
+    );
+
+    const totalPages = Math.max(
+        1, Math.ceil(filtered.length / pageSize)
+    );
+
+    currentPage = Math.min(currentPage, totalPages);
+
+    const start = (currentPage - 1) * pageSize;
+
+    approved.replaceChildren(
+        memberSearch,
+        memberCount,
+        ...filtered.slice(start, start + pageSize)
+    );
+
+    memberCount.textContent =
+        filtered.length + " matching members / " +
+        sortedMembers.length + " approved members";
+
+    if (!filtered.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "No matching approved members.";
+        approved.appendChild(empty);
+    }
+
+    pageInfo.textContent =
+        "Page " + currentPage + " of " + totalPages;
+
+    previousButton.disabled = currentPage === 1;
+    nextButton.disabled = currentPage === totalPages;
+
+    approved.append(previousButton, pageInfo, nextButton);
+}
+
+memberSearch.oninput = () => {
+    currentPage = 1;
+    displayApprovedMembers();
+    memberSearch.focus();
+};
+
+previousButton.onclick = () => {
+    currentPage--;
+    displayApprovedMembers();
+};
+
+nextButton.onclick = () => {
+    currentPage++;
+    displayApprovedMembers();
+};
+
+displayApprovedMembers();
     if (!approved.children.length) {
       approved.textContent = "No approved members yet.";
     }
