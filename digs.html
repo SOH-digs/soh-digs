@@ -349,6 +349,7 @@ youtubeUrl: dig.youtube_url || null,
     county: dig.county || "",
     location: dig.town || "",
     date: dig.start_date.slice(0, 10),
+    endDate: (dig.end_date || dig.start_date).slice(0, 10),
     organiser: dig.detecting_groups?.name || "Detecting Group",
     groupLogo: dig.detecting_groups?.logo_url || null,
     primaryColour: dig.detecting_groups?.primary_colour || "#164e43",
@@ -384,6 +385,21 @@ function formatDate(value) {
 }
 
 function filteredEvents() {
+  const query = search.value.trim().toLowerCase();
+  const today = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Europe/London"
+  });
+
+  return events.filter(e =>
+    e.endDate >= today &&
+    (!query ||
+      [e.title, e.organiser, e.location, e.county]
+        .some(v => v.toLowerCase().includes(query))) &&
+    (!county.value || e.county === county.value) &&
+    (!date.value ||
+      (e.date <= date.value && e.endDate >= date.value))
+  );
+}
   const query=search.value.trim().toLowerCase();
   return events.filter(e=>
     (!query ||
