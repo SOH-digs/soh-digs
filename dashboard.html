@@ -1493,7 +1493,28 @@ group.textContent = "Group: " +
         new Date(member.created_at)
           .toLocaleDateString("en-GB");
 
-      card.append(name, group, status, date);
+      if (member.status === "approved") {
+    card.style.display = "flex";
+    card.style.alignItems = "center";
+    card.style.justifyContent = "space-between";
+    card.style.flexWrap = "wrap";
+    card.style.gap = "10px";
+    card.style.padding = "8px 12px";
+    card.style.marginBottom = "4px";
+
+    name.textContent = fullName || "Name not provided";
+    name.style.fontWeight = "bold";
+    name.style.margin = "0";
+
+    group.textContent = details?.group_name || "Unknown group";
+    group.style.margin = "0";
+
+    date.style.margin = "0";
+
+    card.append(name, group, date);
+} else {
+    card.append(name, group, status, date);
+}
 
       function addAction(label, newStatus) {
 
