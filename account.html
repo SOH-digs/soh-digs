@@ -166,7 +166,7 @@ footer {
 
   <div class="profile-card">
 
-    <div class="avatar">👤</div>
+    <div class="avatar" id="accountAvatar" style="overflow:hidden;">👤</div>
 
     <h2 id="profileName">My Account</h2>
 
@@ -276,7 +276,38 @@ footer {
   }
 
   const user = data.user;
+const { data: profile } = await db
+    .from("profiles")
+    .select("first_name, last_name, avatar_url")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
+let profilePictureUrl = null;
+
+if (profile && profile.avatar_url) {
+
+    const { data: picture } = await db.storage
+        .from("profile-pictures")
+        .createSignedUrl(profile.avatar_url, 3600);
+
+    if (picture) {
+        profilePictureUrl = picture.signedUrl;
+    }
+}
+      if (profilePictureUrl) {
+    const avatar = document.getElementById("accountAvatar");
+
+    const img = document.createElement("img");
+
+    img.src = profilePictureUrl;
+    img.alt = "Your profile picture";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "50%";
+
+    avatar.replaceChildren(img);
+}
   document.getElementById("profileName").textContent =
     user.user_metadata?.full_name || "My Account";
 
