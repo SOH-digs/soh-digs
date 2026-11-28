@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Groups | SOH Digs</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f2f4f1;
+    color: #24352b;
+}
+
+header {
+    background: #193b2b;
+    color: white;
+    text-align: center;
+    padding: 25px 15px;
+}
+
+header h1 {
+    margin: 0 0 10px;
+}
+
+nav {
+    margin-top: 20px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin: 6px 10px;
+}
+
+main {
+    max-width: 800px;
+    margin: 25px auto;
+    padding: 0 15px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.group-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #dce4dc;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.group-logo {
+    width: 65px;
+    height: 65px;
+    border-radius: 12px;
+    background: #e0ebe3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 30px;
+    flex-shrink: 0;
+}
+
+.group-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.group-name {
+    font-size: 19px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.county {
+    color: #666;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.status {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    margin: 15px 0 5px;
+}
+
+.approved {
+    background: #e0f2e5;
+    color: #216b42;
+}
+
+.pending {
+    background: #fff1ce;
+    color: #896000;
+}
+
+.rejected {
+    background: #fce4e4;
+    color: #a12626;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.button {
+    display: inline-block;
+    background: #287a50;
+    color: white;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.secondary {
+    background: #e5ede6;
+    color: #24352b;
+}
+
+.danger {
+    background: #fff;
+    color: #b42318;
+    border: 1px solid #b42318;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+.empty {
+    color: #666;
+    padding: 12px 0;
+    line-height: 1.5;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.summary-box {
+    background: #edf3ee;
+    padding: 18px 10px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.summary-number {
+    font-size: 30px;
+    font-weight: bold;
+    color: #287a50;
+}
+
+.summary-label {
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+#message {
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+footer {
+    text-align: center;
+    padding: 25px 15px;
+    color: #666;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>SOH Digs</h1>
+    <p>My Groups</p>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="digs.html">Find a Dig</a>
+        <a href="account.html">My Account</a>
+    </nav>
+</header>
+
+<main>
+
+    <div class="card">
+        <h2>My Detecting Groups</h2>
+
+        <p>
+            Manage your group memberships and
+            keep track of your membership applications.
+        </p>
+
+        <div class="summary">
+            <div class="summary-box">
+                <div class="summary-number" id="approvedCount">—</div>
+                <div class="summary-label">Approved Memberships</div>
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-number" id="pendingCount">—</div>
+                <div class="summary-label">Pending Applications</div>
+            </div>
+        </div>
+
+        <p id="message" role="status" aria-live="polite">
+            Loading your memberships...
+        </p>
+    </div>
+
+    <div class="card">
+        <h2>My Memberships</h2>
+        <div id="approvedGroups"></div>
+    </div>
+
+    <div class="card">
+        <h2>Pending Applications</h2>
+        <div id="pendingGroups"></div>
+    </div>
+
+    <div class="card">
+        <h2>Other Applications</h2>
+        <div id="otherGroups"></div>
+    </div>
+
+    <div class="card">
+        <h2>Discover More Groups</h2>
+
+        <p>
+            Find detecting groups across the UK
+            and discover your next detecting adventure.
+        </p>
+
+        <a href="groups.html" class="button">
+            Browse Detecting Groups
+        </a>
+    </div>
+
+</main>
+
+<footer>
+    SOH Digs – Supporting Signals of Hope Detecting
+</footer>
+
+<script>
+
+const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+let currentUser = null;
+
+const message = document.getElementById("message");
+
+function createLink(label, url, secondary = false) {
+
+    const link = document.createElement("a");
+
+    link.textContent = label;
+    link.href = url;
+    link.className = secondary
+        ? "button secondary"
+        : "button";
+
+    return link;
+}
+
+function createGroupCard(membership, group) {
+
+    const card = document.createElement("div");
+    card.className = "group-card";
+
+    const header = document.createElement("div");
+    header.className = "group-header";
+
+    const logo = document.createElement("div");
+    logo.className = "group-logo";
+    logo.textContent = "👥";
+
+    if (group?.logo_url) {
+
+        try {
+
+            const url = new URL(group.logo_url);
+
+            if (url.protocol === "https:") {
+
+                const img = document.createElement("img");
+
+                img.alt = "Group logo";
+
+                img.onload = () => {
+                    logo.replaceChildren(img);
+                };
+
+                img.src = url.href;
+            }
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    const details = document.createElement("div");
+
+    const name = document.createElement("div");
+    name.className = "group-name";
+    name.textContent = group?.name || "Group details unavailable";
+
+    const county = document.createElement("div");
+    county.className = "county";
+    county.textContent = group?.county || "";
+
+    details.append(name, county);
+    header.append(logo, details);
+    card.appendChild(header);
+
+    const status = document.createElement("span");
+    status.className = "status";
+
+    if (membership.status === "approved") {
+
+        status.classList.add("approved");
+        status.textContent = "✓ Approved Member";
+
+    } else if (membership.status === "pending") {
+
+        status.classList.add("pending");
+        status.textContent = "Awaiting Approval";
+
+    } else if (membership.status === "rejected") {
+
+        status.classList.add("rejected");
+        status.textContent = "Application Not Approved";
+
+    } else {
+
+        status.textContent = membership.status || "Unknown";
+    }
+
+    card.appendChild(status);
+
+    const date = document.createElement("p");
+    date.className = "county";
+
+    if (membership.created_at) {
+
+        date.textContent = "Application date: " +
+            new Date(membership.created_at)
+                .toLocaleDateString("en-GB");
+    }
+
+    card.appendChild(date);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    if (group) {
+
+        actions.appendChild(
+            createLink(
+                "View Group",
+                "group.html?id=" +
+                encodeURIComponent(membership.group_id),
+                true
+            )
+        );
+
+        if (membership.status === "approved") {
+
+            actions.appendChild(
+                createLink(
+                    "View Digs",
+                    "digs.html?group=" +
+                    encodeURIComponent(membership.group_id)
+                )
+            );
+        }
+    }
+
+    if (
+        membership.status === "approved" ||
+        membership.status === "pending"
+    ) {
+
+        const removeButton = document.createElement("button");
+
+        removeButton.type = "button";
+        removeButton.className = "button danger";
+
+        removeButton.textContent =
+            membership.status === "approved"
+                ? "Leave Group"
+                : "Withdraw Application";
+
+        removeButton.addEventListener("click", () => {
+
+            removeMembership(membership, removeButton);
+
+        });
+
+        actions.appendChild(removeButton);
+    }
+
+    card.appendChild(actions);
+
+    return card;
+}
+
+async function removeMembership(membership, button) {
+
+    const question =
+        membership.status === "approved"
+            ? "Are you sure you want to leave this group? You may need to apply again to rejoin."
+            : "Are you sure you want to withdraw this application?";
+
+    if (!window.confirm(question)) return;
+
+    button.disabled = true;
+
+    try {
+
+        const { data, error } = await db
+            .from("group_memberships")
+            .delete()
+            .eq("id", membership.id)
+            .eq("user_id", currentUser.id)
+            .eq("status", membership.status)
+            .select("id")
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+            throw new Error(
+                "Membership could not be removed. Please refresh and try again."
+            );
+        }
+
+        await loadMemberships();
+
+        message.style.color = "#287a50";
+
+        message.textContent =
+            membership.status === "approved"
+                ? "You have successfully left the group."
+                : "Your application has been withdrawn.";
+
+    } catch (error) {
+
+        message.style.color = "#b42318";
+        message.textContent = error.message;
+
+        button.disabled = false;
+    }
+}
+
+function showEmpty(container, text) {
+
+    const paragraph = document.createElement("p");
+
+    paragraph.className = "empty";
+    paragraph.textContent = text;
+
+    container.appendChild(paragraph);
+}
+
+async function loadMemberships() {
+
+    message.textContent = "Loading your memberships...";
+    message.style.color = "";
+
+    const approved = document.getElementById("approvedGroups");
+    const pending = document.getElementById("pendingGroups");
+    const other = document.getElementById("otherGroups");
+
+    approved.replaceChildren();
+    pending.replaceChildren();
+    other.replaceChildren();
+
+    document.getElementById("approvedCount").textContent = "—";
+    document.getElementById("pendingCount").textContent = "—";
+
+    const { data: memberships, error } = await db
+        .from("group_memberships")
+        .select("id, group_id, user_id, status, created_at")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+
+        message.style.color = "#b42318";
+        message.textContent =
+            "Unable to load memberships: " + error.message;
+
+        return;
+    }
+
+    const groupIds = [
+        ...new Set(memberships.map(item => item.group_id))
+    ];
+
+    let groups = [];
+
+    if (groupIds.length > 0) {
+
+        const { data, error: groupError } = await db
+            .from("detecting_groups")
+            .select("id, name, county, logo_url")
+            .in("id", groupIds);
+
+        if (groupError) {
+
+            message.textContent =
+                "Some group details could not be loaded.";
+
+            console.error(groupError);
+
+        } else {
+
+            groups = data || [];
+            message.textContent = "";
+        }
+
+    } else {
+
+        message.textContent = "";
+    }
+
+    const groupMap = new Map(
+        groups.map(group => [group.id, group])
+    );
+
+    let approvedCount = 0;
+    let pendingCount = 0;
+
+    memberships.forEach(membership => {
+
+        const group = groupMap.get(membership.group_id);
+
+        const card = createGroupCard(membership, group);
+
+        if (membership.status === "approved") {
+
+            approved.appendChild(card);
+            approvedCount++;
+
+        } else if (membership.status === "pending") {
+
+            pending.appendChild(card);
+            pendingCount++;
+
+        } else {
+
+            other.appendChild(card);
+        }
+    });
+
+    document.getElementById("approvedCount").textContent =
+        approvedCount;
+
+    document.getElementById("pendingCount").textContent =
+        pendingCount;
+
+    if (!approved.children.length) {
+
+        showEmpty(
+            approved,
+            "You are not currently a member of any detecting groups."
+        );
+    }
+
+    if (!pending.children.length) {
+
+        showEmpty(
+            pending,
+            "You have no pending membership applications."
+        );
+    }
+
+    if (!other.children.length) {
+
+        showEmpty(
+            other,
+            "You have no other membership applications."
+        );
+    }
+}
+
+async function initialise() {
+
+    const { data, error } = await db.auth.getUser();
+
+    if (error || !data.user) {
+
+        window.location.replace("login.html");
+        return;
+    }
+
+    currentUser = data.user;
+
+    await loadMemberships();
+}
+
+initialise();
+
+</script>
+
+</body>
+</html>
