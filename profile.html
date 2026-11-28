@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile | SOH Digs</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f2f3f0;
+    color: #26352d;
+}
+
+header {
+    background: #193b2b;
+    color: white;
+    text-align: center;
+    padding: 25px 15px;
+}
+
+header h1 {
+    margin: 0 0 10px;
+}
+
+nav {
+    margin-top: 20px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin: 6px 10px;
+}
+
+main {
+    max-width: 600px;
+    margin: 25px auto;
+    padding: 0 15px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.photo-area {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #e0ebe3;
+    margin: 0 auto 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 55px;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 18px;
+    margin-bottom: 7px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cccccc;
+    border-radius: 7px;
+    font-size: 16px;
+}
+
+input[readonly] {
+    background: #f1f1f1;
+    color: #666666;
+}
+
+button, .photo-button {
+    background: #287a50;
+    color: white;
+    border: none;
+    padding: 13px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.save-button {
+    width: 100%;
+    margin-top: 25px;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.photo-button {
+    display: inline-block;
+}
+
+#photoInput {
+    display: none;
+}
+
+#message {
+    text-align: center;
+    margin-top: 18px;
+    overflow-wrap: anywhere;
+}
+
+.small-text {
+    font-size: 13px;
+    color: #666666;
+    line-height: 1.5;
+}
+
+footer {
+    text-align: center;
+    color: #666666;
+    padding: 25px 15px;
+    font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>SOH Digs</h1>
+    <p>My Profile</p>
+
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="digs.html">Find a Dig</a>
+        <a href="account.html">My Account</a>
+    </nav>
+</header>
+
+<main>
+
+<div class="card">
+
+    <h2>Personal Details</h2>
+
+    <p class="small-text">
+        Manage your personal information and profile picture.
+        Your profile details are private.
+    </p>
+
+    <form id="profileForm" hidden>
+
+        <div class="photo-area">
+
+            <div class="avatar" id="avatar">
+                👤
+            </div>
+
+            <label for="photoInput" class="photo-button">
+                Change Profile Picture
+            </label>
+
+            <input type="file"
+                   id="photoInput"
+                   accept="image/jpeg,image/png,image/webp">
+
+            <p class="small-text">
+                JPG, PNG or WEBP. Maximum 5 MB.
+            </p>
+
+        </div>
+
+        <label for="firstName">First Name</label>
+        <input type="text" id="firstName"
+               maxlength="80" autocomplete="given-name">
+
+        <label for="lastName">Last Name</label>
+        <input type="text" id="lastName"
+               maxlength="80" autocomplete="family-name">
+
+        <label for="homeCounty">Home County</label>
+        <input type="text" id="homeCounty"
+               maxlength="80"
+               placeholder="e.g. Essex">
+
+        <label for="email">Registered Email</label>
+        <input type="email" id="email" readonly>
+
+        <p class="small-text">
+            Your registered email cannot be changed on this page.
+        </p>
+
+        <button type="submit"
+                class="save-button"
+                id="saveButton">
+            Save Profile
+        </button>
+
+    </form>
+
+    <p id="message" role="status" aria-live="polite">
+        Loading your profile...
+    </p>
+
+</div>
+
+</main>
+
+<footer>
+    SOH Digs – Supporting Signals of Hope Detecting
+</footer>
+
+<script>
+
+const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7w0NUzfVisJQ_SuRFsjPK";
+
+const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+let currentUser = null;
+let avatarPath = null;
+let selectedPhoto = null;
+let previewUrl = null;
+
+const message = document.getElementById("message");
+const form = document.getElementById("profileForm");
+const saveButton = document.getElementById("saveButton");
+const photoInput = document.getElementById("photoInput");
+
+function showAvatar(url) {
+
+    const avatar = document.getElementById("avatar");
+
+    avatar.textContent = "";
+
+    const img = document.createElement("img");
+
+    img.src = url;
+    img.alt = "Your profile picture";
+
+    avatar.appendChild(img);
+}
+
+async function loadProfile() {
+
+    const { data, error } = await db.auth.getUser();
+
+    if (error || !data.user) {
+        window.location.replace("login.html");
+        return;
+    }
+
+    currentUser = data.user;
+
+    document.getElementById("email").value =
+        currentUser.email || "";
+
+    const { data: profile, error: profileError } =
+        await db
+        .from("profiles")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+    if (profileError) {
+        message.textContent = "Unable to load your profile.";
+        return;
+    }
+
+    if (profile) {
+
+        document.getElementById("firstName").value =
+            profile.first_name || "";
+
+        document.getElementById("lastName").value =
+            profile.last_name || "";
+
+        document.getElementById("homeCounty").value =
+            profile.home_county || "";
+
+        avatarPath = profile.avatar_url;
+
+        if (avatarPath) {
+
+            const { data: photo } = await db.storage
+                .from("profile-pictures")
+                .createSignedUrl(avatarPath, 3600);
+
+            if (photo) {
+                showAvatar(photo.signedUrl);
+            }
+        }
+    }
+
+    form.hidden = false;
+    message.textContent = "";
+}
+
+photoInput.addEventListener("change", function() {
+
+    const file = this.files[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+        message.textContent = "Please choose a JPG, PNG or WEBP image.";
+        this.value = "";
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        message.textContent = "Your picture must be smaller than 5 MB.";
+        this.value = "";
+        return;
+    }
+
+    selectedPhoto = file;
+
+    if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+    }
+
+    previewUrl = URL.createObjectURL(file);
+
+    showAvatar(previewUrl);
+
+    message.textContent =
+        "Picture selected. Click Save Profile to upload it.";
+});
+
+form.addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    if (!currentUser) return;
+
+    saveButton.disabled = true;
+    photoInput.disabled = true;
+    saveButton.textContent = "Saving...";
+    message.textContent = "";
+
+    let newAvatarPath = avatarPath;
+    let uploadedPath = null;
+    let profileSaved = false;
+
+    try {
+
+        if (selectedPhoto) {
+
+            const extensions = {
+                "image/jpeg": "jpg",
+                "image/png": "png",
+                "image/webp": "webp"
+            };
+
+            const extension = extensions[selectedPhoto.type];
+
+            newAvatarPath =
+                currentUser.id + "/" +
+                crypto.randomUUID() + "." + extension;
+
+            const { error: uploadError } =
+                await db.storage
+                .from("profile-pictures")
+                .upload(newAvatarPath, selectedPhoto, {
+                    contentType: selectedPhoto.type,
+                    upsert: false
+                });
+
+            if (uploadError) throw uploadError;
+
+            uploadedPath = newAvatarPath;
+        }
+
+        const { error } = await db
+            .from("profiles")
+            .upsert({
+                user_id: currentUser.id,
+                first_name: document.getElementById("firstName").value.trim(),
+                last_name: document.getElementById("lastName").value.trim(),
+                home_county: document.getElementById("homeCounty").value.trim(),
+                avatar_url: newAvatarPath
+            }, {
+                onConflict: "user_id"
+            });
+
+        if (error) throw error;
+
+        profileSaved = true;
+
+        const oldAvatarPath = avatarPath;
+
+        avatarPath = newAvatarPath;
+        selectedPhoto = null;
+        photoInput.value = "";
+
+        message.style.color = "#287a50";
+        message.textContent = "Your profile has been saved successfully.";
+
+        if (uploadedPath && oldAvatarPath &&
+            oldAvatarPath !== uploadedPath) {
+
+            const { error: cleanupError } =
+                await db.storage
+                .from("profile-pictures")
+                .remove([oldAvatarPath]);
+
+            if (cleanupError) {
+                console.error(cleanupError);
+                message.textContent =
+                    "Profile saved, but the previous picture could not be removed.";
+            }
+        }
+
+    } catch (error) {
+
+        if (uploadedPath && !profileSaved) {
+            await db.storage
+                .from("profile-pictures")
+                .remove([uploadedPath]);
+        }
+
+        message.style.color = "#b91c1c";
+        message.textContent =
+            "Unable to save your profile. " + error.message;
+
+    } finally {
+
+        saveButton.disabled = false;
+        photoInput.disabled = false;
+        saveButton.textContent = "Save Profile";
+    }
+});
+
+loadProfile();
+
+</script>
+
+</body>
+</html>
