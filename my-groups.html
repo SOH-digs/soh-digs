@@ -555,7 +555,7 @@ async function loadMemberships() {
         if (groupError) {
 
             message.textContent =
-                "Some group details could not be loaded.";
+    "Unable to load group details: " + groupError.message;
 
             console.error(groupError);
 
