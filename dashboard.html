@@ -1450,7 +1450,17 @@ loadGroupReviews();
         .order("created_at", { ascending: false });
 
     if (error) throw error;
+const { data: memberNames, error: namesError } =
+    await db.rpc("get_group_member_names");
 
+if (namesError) throw namesError;
+
+const memberNamesMap = new Map(
+    (memberNames || []).map(item => [
+        item.membership_id,
+        item
+    ])
+);
     members.forEach(member => {
 
       const card = document.createElement("div");
@@ -1460,11 +1470,20 @@ loadGroupReviews();
       card.style.border = "1px solid #ddd";
       card.style.borderRadius = "8px";
 
-      const name = document.createElement("p");
-      name.textContent = "Member ID: " + member.user_id;
+      const details = memberNamesMap.get(member.id);
 
-      const group = document.createElement("p");
-      group.textContent = "Group ID: " + member.group_id;
+const fullName = [
+    details?.first_name,
+    details?.last_name
+].filter(Boolean).join(" ");
+
+const name = document.createElement("p");
+name.textContent = "Member: " +
+    (fullName || "Name not provided");
+
+const group = document.createElement("p");
+group.textContent = "Group: " +
+    (details?.group_name || "Group name unavailable");
 
       const status = document.createElement("p");
       status.textContent = "Status: " + member.status;
