@@ -292,7 +292,7 @@ async function loadProfile() {
         .maybeSingle();
 
     if (profileError) {
-        message.textContent = "Unable to load your profile.";
+        message.textContent = "Unable to load your profile: " + profileError.message;
         return;
     }
 
