@@ -630,7 +630,9 @@ function renderCalendar() {
     day.className="day";
     addText(day,"strong",String(n));
     const key=`${year}-${String(month+1).padStart(2,"0")}-${String(n).padStart(2,"0")}`;
-    const matches=filteredEvents().filter(e=>e.date===key);
+    const matches = filteredEvents().filter(e =>
+    e.date <= key && e.endDate >= key
+);
     if(matches.length) day.classList.add("has-event");
     matches.forEach(e=>{
       const button=document.createElement("button");
@@ -660,7 +662,7 @@ $("listTab").addEventListener("click",()=>{
 $("calendarTab").addEventListener("click",()=>{
   $("calendarView").classList.remove("hidden");
   $("listView").classList.add("hidden");
-  $("calendarTab").classList.add("active");
+  $("calendarTab").classList.add("active")
   $("listTab").classList.remove("active");
   renderCalendar();
 });
