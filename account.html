@@ -308,8 +308,13 @@ if (profile && profile.avatar_url) {
 
     avatar.replaceChildren(img);
 }
-  document.getElementById("profileName").textContent =
-    user.user_metadata?.full_name || "My Account";
+  const savedName = [
+    profile?.first_name,
+    profile?.last_name
+].filter(Boolean).join(" ").trim();
+
+document.getElementById("profileName").textContent =
+    savedName || user.user_metadata?.full_name || "My Account";
 
   document.getElementById("profileEmail").textContent =
     user.email;
