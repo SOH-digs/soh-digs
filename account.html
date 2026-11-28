@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account | SOH Digs</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f2f4f1;
+  color: #24352b;
+}
+
+header {
+  background: #193b2b;
+  color: white;
+  text-align: center;
+  padding: 22px 15px;
+}
+
+header h1 {
+  margin: 0 0 8px;
+}
+
+nav {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+main {
+  max-width: 700px;
+  margin: 25px auto;
+  padding: 0 15px;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  text-align: center;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px #00000012;
+}
+
+.avatar {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: #e1ebe3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  font-size: 42px;
+}
+
+.status {
+  color: #228b57;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.account-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px #00000012;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  text-decoration: none;
+  color: #24352b;
+}
+
+.account-row:last-child {
+  border-bottom: none;
+}
+
+.account-row:hover {
+  background: #edf4ee;
+}
+
+.account-icon {
+  font-size: 26px;
+  width: 35px;
+  text-align: center;
+}
+
+.account-text {
+  flex: 1;
+}
+
+.account-text strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.account-text small {
+  color: #666;
+  line-height: 1.4;
+}
+
+.arrow {
+  color: #888;
+  font-size: 24px;
+}
+
+.logout {
+  width: 100%;
+  padding: 15px;
+  background: #b91c1c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #666;
+  font-size: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>SOH Digs</h1>
+  <div>My Account</div>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="digs.html">Find a Dig</a>
+    <a href="groups.html">Detecting Groups</a>
+  </nav>
+</header>
+
+<main>
+
+  <div class="profile-card">
+
+    <div class="avatar">👤</div>
+
+    <h2 id="profileName">My Account</h2>
+
+    <p id="profileEmail">Account details</p>
+
+    <p class="status" id="loginStatus">
+      Checking account...
+    </p>
+
+    <p id="accountRole"></p>
+
+  </div>
+
+  <div class="account-card">
+
+    <div class="account-row">
+      <div class="account-icon">👤</div>
+      <div class="account-text">
+        <strong>My Profile</strong>
+        <small>Manage your personal details and profile picture</small>
+      </div>
+      <span class="arrow">›</span>
+    </div>
+
+    <div class="account-row">
+      <div class="account-icon">👥</div>
+      <div class="account-text">
+        <strong>My Groups</strong>
+        <small>Memberships and pending applications</small>
+      </div>
+      <span class="arrow">›</span>
+    </div>
+
+    <a class="account-row" href="favourites.html">
+      <div class="account-icon">❤️</div>
+      <div class="account-text">
+        <strong>My Favourites</strong>
+        <small>Saved digs and detecting groups</small>
+      </div>
+      <span class="arrow">›</span>
+    </a>
+
+    <div class="account-row">
+      <div class="account-icon">🔔</div>
+      <div class="account-text">
+        <strong>Notifications</strong>
+        <small>Manage dig alerts and reminders</small>
+      </div>
+      <span class="arrow">›</span>
+    </div>
+
+    <div class="account-row">
+      <div class="account-icon">🔒</div>
+      <div class="account-text">
+        <strong>Security</strong>
+        <small>Change your password</small>
+      </div>
+      <span class="arrow">›</span>
+    </div>
+
+    <div class="account-row">
+      <div class="account-icon">⚙️</div>
+      <div class="account-text">
+        <strong>Account Settings</strong>
+        <small>Privacy and account management</small>
+      </div>
+      <span class="arrow">›</span>
+    </div>
+
+    <a class="account-row" id="organiserLink"
+       href="dashboard.html" style="display:none;">
+      <div class="account-icon">📋</div>
+      <div class="account-text">
+        <strong>Organiser Dashboard</strong>
+        <small>Manage your detecting group and digs</small>
+      </div>
+      <span class="arrow">›</span>
+    </a>
+
+  </div>
+
+  <button class="logout" id="logoutButton" disabled>
+    Log Out
+  </button>
+
+</main>
+
+<footer>
+  SOH Digs — Supporting Signals of Hope Detecting
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  const SUPABASE_URL = "https://vibhttgthmsxxsbgdbqk.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_9mD8kTnLgA7wONUzfVisJQ_SuRFsjPK";
+
+  const db = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+    async function loadAccount() {
+
+  const { data, error } = await db.auth.getUser();
+
+  if (error || !data.user) {
+    window.location.replace("login.html");
+    return;
+  }
+
+  const user = data.user;
+
+  document.getElementById("profileName").textContent =
+    user.user_metadata?.full_name || "My Account";
+
+  document.getElementById("profileEmail").textContent =
+    user.email;
+
+  document.getElementById("loginStatus").textContent =
+    "● Logged in";
+
+  document.getElementById("logoutButton").disabled = false;
+
+  const { data: organiser, error: roleError } = await db
+    .from("group_organisers")
+    .select("role")
+    .eq("user_id", user.id)
+    .limit(1);
+
+  if (roleError) {
+    document.getElementById("accountRole").textContent =
+      "Unable to check account type";
+    return;
+  }
+
+  if (organiser && organiser.length > 0) {
+
+    document.getElementById("accountRole").textContent =
+      "Group Organiser";
+
+    document.getElementById("organiserLink").style.display =
+      "flex";
+
+  } else {
+
+    document.getElementById("accountRole").textContent =
+      "SOH Digs Member";
+
+  }
+
+}
+
+document.getElementById("logoutButton")
+  .addEventListener("click", async () => {
+
+    const { error } = await db.auth.signOut();
+
+    if (error) {
+      alert("Unable to log out. Please try again.");
+      return;
+    }
+
+    window.location.replace("index.html");
+
+  });
+
+loadAccount();
+    </script>
+</body>
+</html>
