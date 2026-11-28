@@ -471,7 +471,10 @@ if (e.isPrivate) {
 }
     const body=document.createElement("div");
     body.className="card-body";
-    addText(body,"p","📅 "+formatDate(e.date),"meta");
+    addText(body,"p","📅 " +
+  (e.endDate && e.endDate !== e.date
+    ? formatDate(e.date) + " – " + formatDate(e.endDate)
+    : formatDate(e.date)), "meta");
     addText(body,"p","📍 "+e.location+", "+e.county,"meta");
     const organiserRow = document.createElement("div");
 organiserRow.style.display = "flex";
@@ -569,7 +572,10 @@ if (e.isPrivate) {
     content.appendChild(privateLabel);
 }
   addText(content,"p","Please contact the event organiser for booking information.");
-  addText(content,"p","Date: "+formatDate(e.date));
+  addText(content,"p","Date: " +
+  (e.endDate && e.endDate !== e.date
+    ? formatDate(e.date) + " – " + formatDate(e.endDate)
+    : formatDate(e.date)));
   addText(content,"p","Location: "+e.location+", "+e.county);
   addText(content,"p","Organiser: "+e.organiser);
   addText(content,"p","Price: "+e.price);
