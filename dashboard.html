@@ -412,7 +412,7 @@ accept="image/jpeg,image/png,image/webp"><br><br>
 
   <h3>Approved Members (<span id="approvedMemberCount">0</span>)</h3>
 
-<input type="search"
+<input type="search" hidden
        id="approvedMemberSearch"
        aria-label="Search members by name"
        placeholder="Search members by name..."
@@ -1682,6 +1682,8 @@ nextButton.onclick = () => {
 };
 
 displayApprovedMembers();
+    document.getElementById("approvedMemberCount").textContent =
+    members.filter(member => member.status === "approved").length;
     if (!approved.children.length) {
       approved.textContent = "No approved members yet.";
     }
