@@ -447,7 +447,6 @@ card.style.borderBottom = "4px solid " + secondaryColour;
 }
     const top=document.createElement("div");
     top.className="card-top";
-    addText(top,"small","EXAMPLE EVENT");
     addText(top,"h2",e.title);
 
 if (e.isPrivate) {
@@ -560,7 +559,7 @@ if (e.isPrivate) {
     privateLabel.style.marginBottom = "12px";
     content.appendChild(privateLabel);
 }
-  addText(content,"p","Demonstration event — not bookable.");
+  addText(content,"p","Please contact the event organiser for booking information.");
   addText(content,"p","Date: "+formatDate(e.date));
   addText(content,"p","Location: "+e.location+", "+e.county);
   addText(content,"p","Organiser: "+e.organiser);
