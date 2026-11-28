@@ -408,7 +408,7 @@ function renderList() {
     (filtered.length===1?" example dig":" example digs")+" found";
 
   if(!filtered.length) {
-    addText(cards,"p","No matching example digs found.","empty");
+    addText(cards,"p","No matching digs found.","empty");
     return;
   }
 
@@ -498,7 +498,7 @@ while (organiserRow.firstChild) {
 groupLink.appendChild(document.createTextNode(e.organiser));
 organiserRow.appendChild(groupLink);
 body.appendChild(organiserRow);
-    addText(body,"p","Example price: "+e.price);
+    addText(body,"p","Price: "+e.price);
     const button=document.createElement("button");
     button.className="details";
     button.textContent="View Details";
@@ -563,7 +563,7 @@ if (e.isPrivate) {
   addText(content,"p","Date: "+formatDate(e.date));
   addText(content,"p","Location: "+e.location+", "+e.county);
   addText(content,"p","Organiser: "+e.organiser);
-  addText(content,"p","Example price: "+e.price);
+  addText(content,"p","Price: "+e.price);
   addText(content,"p",e.description);
   function addEventLink(url, label) {
   if (!url) return;
