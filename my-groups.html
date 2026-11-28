@@ -549,7 +549,7 @@ async function loadMemberships() {
 
         const { data, error: groupError } = await db
             .from("detecting_groups")
-            .select("id, name, county, logo_url")
+            .select("id, name, county:home_county, logo_url")
             .in("id", groupIds);
 
         if (groupError) {
